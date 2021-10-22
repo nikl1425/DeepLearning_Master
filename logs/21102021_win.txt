@@ -1,0 +1,103 @@
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_01.parquet.gzip index: 0
+len of sz: 0
+memory usage = 61.3 : available memory = 38.65894105451912
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_01.parquet.gzip = done : count = 0 : files left = 65 : time of creation = 2021-10-21 15:31:49.678133
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_02.parquet.gzip index: 1
+len of sz: 0
+memory usage = 67.0 : available memory = 32.96264123174214
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_02.parquet.gzip = done : count = 1 : files left = 64 : time of creation = 2021-10-21 15:36:06.466304
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_03.parquet.gzip index: 2
+len of sz: 10240
+memory usage = 67.1 : available memory = 32.87199695735461
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_03.parquet.gzip = done : count = 2 : files left = 63 : time of creation = 2021-10-21 15:40:37.553550
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_04.parquet.gzip index: 3
+len of sz: 6912
+memory usage = 72.8 : available memory = 27.159122319011555
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_04.parquet.gzip = done : count = 3 : files left = 62 : time of creation = 2021-10-21 15:45:50.866775
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_05.parquet.gzip index: 4
+len of sz: 0
+memory usage = 79.5 : available memory = 20.46039497135973
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_05.parquet.gzip = done : count = 4 : files left = 61 : time of creation = 2021-10-21 15:51:37.766724
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_06.parquet.gzip index: 5
+len of sz: 0
+memory usage = 80.3 : available memory = 19.652198304076418
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_06.parquet.gzip = done : count = 5 : files left = 60 : time of creation = 2021-10-21 15:57:52.973493
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_07.parquet.gzip index: 6
+len of sz: 0
+memory usage = 86.0 : available memory = 14.02917408102992
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_07.parquet.gzip = done : count = 6 : files left = 59 : time of creation = 2021-10-21 16:04:36.531011
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_08.parquet.gzip index: 7
+len of sz: 0
+memory usage = 88.2 : available memory = 11.828308004818004
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_08.parquet.gzip = done : count = 7 : files left = 58 : time of creation = 2021-10-21 16:11:47.596617
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_09.parquet.gzip index: 8
+len of sz: 0
+memory usage = 90.8 : available memory = 9.200297624990107
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_09.parquet.gzip = done : count = 8 : files left = 57 : time of creation = 2021-10-21 16:19:27.661946
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_10.parquet.gzip index: 9
+len of sz: 0
+memory usage = 93.2 : available memory = 6.825600464191061
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_10.parquet.gzip = done : count = 9 : files left = 56 : time of creation = 2021-10-21 16:27:35.487003
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_11.parquet.gzip index: 10
+len of sz: 0
+memory usage = 97.2 : available memory = 2.760464566340038
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_11.parquet.gzip = done : count = 10 : files left = 55 : time of creation = 2021-10-21 16:36:07.079886
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_12.parquet.gzip index: 11
+len of sz: 0
+memory usage = 97.4 : available memory = 2.5912282419461192
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_12.parquet.gzip = done : count = 11 : files left = 54 : time of creation = 2021-10-21 16:46:33.845982
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_13.parquet.gzip index: 12
+len of sz: 0
+memory usage = 96.1 : available memory = 3.882524250591004
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_13.parquet.gzip = done : count = 12 : files left = 53 : time of creation = 2021-10-21 16:56:46.558711
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_14.parquet.gzip index: 13
+len of sz: 0
+memory usage = 90.1 : available memory = 9.858575205759857
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_14.parquet.gzip = done : count = 13 : files left = 52 : time of creation = 2021-10-21 17:06:34.633568
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_15.parquet.gzip index: 14
+len of sz: 10240
+memory usage = 93.0 : available memory = 6.973089860759521
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_15.parquet.gzip = done : count = 14 : files left = 51 : time of creation = 2021-10-21 17:16:28.989045
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_16.parquet.gzip index: 15
+len of sz: 13056
+memory usage = 95.2 : available memory = 4.842179609897642
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_16.parquet.gzip = done : count = 15 : files left = 50 : time of creation = 2021-10-21 17:26:52.645438
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_17.parquet.gzip index: 16
+len of sz: 0
+memory usage = 96.1 : available memory = 3.91033337511117
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_17.parquet.gzip = done : count = 16 : files left = 49 : time of creation = 2021-10-21 17:37:36.854606
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_18.parquet.gzip index: 17
+len of sz: 23040
+memory usage = 89.3 : available memory = 10.697106912852796
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_18.parquet.gzip = done : count = 17 : files left = 48 : time of creation = 2021-10-21 17:49:04.242814
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_19.parquet.gzip index: 18
+len of sz: 0
+memory usage = 93.7 : available memory = 6.304179379437943
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_19.parquet.gzip = done : count = 18 : files left = 47 : time of creation = 2021-10-21 18:00:42.685994
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_20.parquet.gzip index: 19
+len of sz: 0
+memory usage = 95.7 : available memory = 4.259270530098205
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_20.parquet.gzip = done : count = 19 : files left = 46 : time of creation = 2021-10-21 18:09:34.978212
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_21.parquet.gzip index: 20
+len of sz: 23808
+memory usage = 96.1 : available memory = 3.8645541675316926
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_21.parquet.gzip = done : count = 20 : files left = 45 : time of creation = 2021-10-21 18:22:17.467851
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_22.parquet.gzip index: 21
+len of sz: 0
+memory usage = 90.8 : available memory = 9.24730370571018
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_22.parquet.gzip = done : count = 21 : files left = 44 : time of creation = 2021-10-21 18:35:11.521495
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_23.parquet.gzip index: 22
+len of sz: 0
+memory usage = 94.8 : available memory = 5.185848427280944
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_23.parquet.gzip = done : count = 22 : files left = 43 : time of creation = 2021-10-21 18:48:31.049126
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_24.parquet.gzip index: 23
+len of sz: 0
+memory usage = 96.2 : available memory = 3.775257047965207
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_24.parquet.gzip = done : count = 23 : files left = 42 : time of creation = 2021-10-21 19:02:18.604568
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_25.parquet.gzip index: 24
+len of sz: 0
+memory usage = 83.0 : available memory = 16.950936380854138
+filename: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_25.parquet.gzip = done : count = 24 : files left = 41 : time of creation = 2021-10-21 19:16:22.181247
+started file: C:/Users/45535/Desktop/speciale/DeepLearning_Master/SingleChannelParquet/chb01_26.parquet.gzip index: 25
+len of sz: 25856
+list index out of range

@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/usr/local/Caskroom/miniforge/base/envs/tensorflow3/bin/python3.9"
+    "python.pythonPath": "/usr/local/Caskroom/miniforge/base/envs/tensorflow3/bin/python3.9",
+    "jupyter.jupyterServerType": "local"
 }

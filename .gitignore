@@ -1,3 +1,14 @@
 Dataset/
 Køge-Dataset/
 graphviz-2.49.1/
+windows/
+.vscode/
+.ipynb_checkpoints/
+./windows
+Interictal/
+Preictal_One/
+Preictal_Two/
+Seizure/
+SingleChannelParquet/
+SingleChannelParquet/
+best_model.h5
