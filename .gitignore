@@ -2,3 +2,12 @@ Dataset/
 Køge-Dataset/
 graphviz-2.49.1/
 MIT_Model/test_images/
+DataHandling/test_data/
+MIT_Model/csv/tester.csv
+.gitignore
+DataHandling/chb20_13.csv
+MIT_Model/h5_files/ten_epoch_onlytrain_model.h5
+MIT_Model/h5_files/PairTrained_3Ep_3epoch.h5
+MIT_Model/test_data
+.gitignore
+MIT_Model/hi2.png
