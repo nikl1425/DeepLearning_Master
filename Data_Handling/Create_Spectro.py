@@ -123,7 +123,7 @@ def get_window(channel, start_index, data, size = 4, overlap = 0, is_sezure = Fa
     date_timestamp = ""
 
     try:
-        date_timestamp = (datetime(1970, 1, 1) + timedelta(seconds=-2208939408000.0/1000)).strftime('%H:%M:%S')
+        date_timestamp = (datetime(1970, 1, 1) + timedelta(seconds=data['timestamp'][start]/1000)).strftime('%H:%M:%S')
     except:
         date_timestamp = "datetime cannot be converted"
     
@@ -187,12 +187,16 @@ def spec_transform_save_to_folder(index, win, channel, patient_state, patient, p
 
 def create_save_spectrogram():
     count = 0
-    for filename in files[1:2]:
+    for filename in files[3:]:
         print("started file: " + str(filename) + " index: " + str(count))
         sz, prei_one, prei_two, inter, selected_channels = read_compressed_df(filename)
+        inter = inter.reset_index(drop=True)
+        sz = sz.reset_index(drop=True)
+        prei_one = prei_one.reset_index(drop=True)
+        prei_two = prei_two.reset_index(drop=True)
         patient = re.search('filtered_df_csv/(.*).csv', filename).group(1)
         print(patient)
-        for channel in selected_channels[16:]:
+        for channel in selected_channels:
             print(f"channel: " + str(channel))
             if len(inter) > 0 and inter.empty == False:
                 inter_win = [get_window(channel=channel,start_index=i, data=inter) for i in range(get_max_window_iteration(inter, 4))]
@@ -235,12 +239,24 @@ if __name__ == "__main__":
     filename = files[0]
     print(filename)
     sz, prei_one, prei_two, inter, selected_channels = read_compressed_df(filename)
-    for i, x in enumerate(selected_channels):
-        print(f"{x} : {i}")
-    #create_save_spectrogram()
+    # # # print("INTER")
+    # # # inter.reset_index(drop=True)
+    # # # print(inter.head())
     
-    df = pd.read_csv(files[0])
-    print(df['timestamp'][0])
-    print(df.head())
+    # print(inter['timestamp'][1])
+    for x in enumerate(selected_channels):
+         print(f"{x} ")
+    # #create_save_spectrogram()
+    # print(inter['timestamp'][1])
+    for x in enumerate(files):
+        print(f"{x} ")
+    # print(inter.head())
+    # df = pd.read_csv(files[0])
+    
+    # print(df.head())
+
+    # date_timestamp = (datetime(1970, 1, 1) + timedelta(seconds=inter['timestamp'][0]/1000)).strftime('%H:%M:%S')
+
+    # print(date_timestamp)
 
     
