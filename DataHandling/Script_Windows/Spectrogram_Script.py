@@ -1,5 +1,4 @@
-# %%
-# What version of Python do you have?
+
 import sys
 import os
 import tensorflow.keras
@@ -42,9 +41,8 @@ print(cwd)
 FREQ = 256
 database_path = 'Dataset/CHB-MIT/chb-mit-scalp-eeg-database-1.0.0/'
 filtered_database_path = 'Dataset/CHB-MIT/Filtered-chb-mit/'
-filted_db_parquet_path = "Dataset/CHB-MIT/dataframe-parquet"
-win_chb01_path = "Dataset/win_chb_01/"
 external_hardisk_drive_path = '/Volumes/LaCie/Database/'
+external_windows_path = "windows_01/"
 edf_file_type = ".edf"
 compressed_file_type = ".csv"
 
@@ -180,9 +178,10 @@ def spec_transform_save_to_folder(index, win, channel, patient_state, patient, p
     plt.close('all')
     gc.collect()
 
-count = 0
+
 
 def create_save_spectrogram():
+    count = 0
     for filename in files:
         print("started file: " + str(filename) + " index: " + str(count))
         sz, prei_one, prei_two, inter, selected_channels = read_compressed_df(filename)
