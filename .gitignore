@@ -11,3 +11,8 @@ MIT_Model/h5_files/PairTrained_3Ep_3epoch.h5
 MIT_Model/test_data
 .gitignore
 MIT_Model/hi2.png
+DataHandling/MIT_CHB/hi2.png
+output.png
+DataHandling/MIT_CHB/hi.png
+MIT_Model/eval.png
+MIT_Model/history.txt
