@@ -51,7 +51,7 @@ def reduce_lr():
 
 def checkpoint():
     return ModelCheckpoint(filepath="Shallow_checkpoint.h5",
-                            monitor='val_accuracy',
+                            monitor='val_categorical_accuracy',
                             mode='max',
                             save_best_only=True)
 
