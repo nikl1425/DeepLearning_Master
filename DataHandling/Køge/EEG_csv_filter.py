@@ -42,10 +42,17 @@ capitilize_edf_file_type = ".EDF"
 bdf_file_type = ".BDF"
 patient_one_path = 'chb04/'
 
-os.chdir("/Volumes/NHR HDD/")
-database_path = "EMU_monitor(ruc)/"
-info_df_path = database_path + "NHR_Eventlist_RUC.xlsx"
-save_csv_path = "Køge/EEG_csv_filtered/"
+# INTERNAL PATH:
+database_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/"
+info_df_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR_Eventlist_RUC.xlsx"
+save_csv_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR/EEG/"
+
+
+# EXTERNAL PATH:
+# os.chdir("/Volumes/NHR HDD/")
+# database_path = "EMU_monitor(ruc)/"
+# info_df_path = database_path + "NHR_Eventlist_RUC.xlsx"
+# save_csv_path = "Køge/EEG_csv_filtered/"
 
 
 info_df = pd.read_excel(info_df_path, sheet_name="NHR_EEG")
@@ -74,7 +81,6 @@ for i, r in info_df.iterrows():
     if container not in info_list:
         info_list.append(container)
 
-info_list[0:5]
 
 class container():
     def __init__(self, delay, time_emu, duration, id):
@@ -88,7 +94,7 @@ file_sz_info = []
 for c in info_list:
     f = c['File']
     p = c['ID']
-    print(f)
+    print(f"info_list f: {f}")
     cont_storage = []
     sz_count = 0
     for i, r in info_df.iterrows():
@@ -141,6 +147,8 @@ def insert_time_stamp(dataframe, file_start_time, frq):
     dataframe.insert(0, "timestamp", [timestamp_ms + i * period_row_increment_value for i in dataframe.index])
 
 
+class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
+
 def insert_class_col(dataframe, sz_info_list):
     print(f"sz_info_list: {sz_info_list}")
     
@@ -158,18 +166,20 @@ def insert_class_col(dataframe, sz_info_list):
             print(f"sz_start index = {sz_start}")
             print(f"sz_end: {sz_end}")
             preictal_start = sz_start - (15 * 60 * 1000)
+            interictal_start = sz_start - (2 * 60 * 60 * 1000)
+            interictal_end = sz_end + (2 * 60 * 60 * 1000)
             dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
 
             #INSERTING PREICTAL
-            dataframe.loc[(dataframe['class'] != "seizure") & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = "Preictal"
+            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = class_mapping['Preictal']
 
             #INSERTING SEIZURE CLASS
-            dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = "seizure"
+            dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = class_mapping['Seizure']
 
             #INSERTING INTERICTAL
-            dataframe.loc[(dataframe['class'] != "seizure") & (dataframe['class'] != "Preictal"), "class"] = "Interictal"
+            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['class'] != class_mapping['Preictal']) & (dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < interictal_end), "class"] = class_mapping['Interictal']
 
-            print(dataframe["class"].value_counts())
+            print(f"after = len df: {len(dataframe)} values class: \n {dataframe['class'].value_counts()}")
     gc.collect()
 
 
@@ -202,7 +212,7 @@ def downcast_dtypes(df):
     return df
 
 def run_save_pd_csv():
-    for e in file_sz_info[5:]:
+    for e in file_sz_info:
         print(f"patient_id: {e[0]}")
         print(f"file_name: {e[1]}")
 
@@ -224,6 +234,9 @@ def run_save_pd_csv():
         #LOGGING:
         logging_info_txt(save_file_name, file_sample_rate, file_channel)
 
+        #Only keep rows containing class:
+        df = df[df['class'].isin([class_mapping['Interictal'], class_mapping['Seizure'], class_mapping['Preictal']])]
+
         #SAVE TO CSV
         df_save_compress(save_file_name, df)
 
@@ -231,9 +244,11 @@ def run_save_pd_csv():
         del df, data_info
         gc.collect()
 
-        print()
+        print("DONE")
     
 
 
 if __name__ == "__main__":
+    print(f"class seizure mapping: {class_mapping['Seizure']} type: {type(class_mapping['Seizure'])}")
+
     run_save_pd_csv()

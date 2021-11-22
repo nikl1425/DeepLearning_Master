@@ -51,10 +51,10 @@ compressed_file_type = ".csv"
 #external
 os.chdir("/volumes/")
 external_hardisk_drive_path = '/Volumes/NHR HDD/'
-files = [external_hardisk_drive_path + "Køge_02/EEG/" + f for f in os.listdir(external_hardisk_drive_path + "Køge_02/EEG/") if f.endswith(compressed_file_type)]
-window_path = external_hardisk_drive_path + "Køge_02/Windows/EEG/"
-Log_file_path = external_hardisk_drive_path + "/Køge_02/Windows/Log.txt"
-info_txt_file_path = external_hardisk_drive_path + "/Køge_02/EEG/info.txt"
+files = [external_hardisk_drive_path + "Køge_02/ECG/" + f for f in os.listdir(external_hardisk_drive_path + "Køge_02/ECG/") if f.endswith(compressed_file_type)]
+window_path = external_hardisk_drive_path + "Køge_02/Windows/EKG/"
+Log_file_path = external_hardisk_drive_path + "/Køge_02/Windows/EKG/Log.txt"
+info_txt_file_path = external_hardisk_drive_path + "/Køge_02/ECG/info.txt"
 
 
 for f in files[0:1]:
@@ -68,7 +68,7 @@ for f in files[0:1]:
 #df.columns
 
 def read_compressed_df(path):
-    df = pd.read_csv(path, usecols=[1,2,3,4])
+    df = pd.read_csv(path, usecols=[1,2,3])
     df['class'] = df['class'].astype('int32')
 
     sz_df = df.loc[df['class'] == 1]
@@ -112,21 +112,6 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     y = signal.lfilter(b, a, data)
     return y
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = signal.butter(order, normal_cutoff, btype='low', analog=False)
-    y = signal.filtfilt(b, a, data)
-    return y
-
-def butter_bandstop_filter(data, lowcut, highcut, fs, order):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    i, u = signal.butter(order, [low, high], btype='bandstop')
-    y = signal.lfilter(i, u, data)
-    return y
-
 
 def logging_info_txt(string_to_write):
     file_object = open(Log_file_path, "a")
@@ -136,7 +121,7 @@ def logging_info_txt(string_to_write):
 plt.figure(figsize=(10,10))       # Define the sampling frequency,
 
 def spec_transform_save_to_folder(index, win, channel, patient_state, patient, plot_title = False):
-    interval = int(FREQ/4)   # ... the interval size,
+    interval = int(FREQ/2)   # ... the interval size,
     overlap = int(interval * 0.95)  # ... and the overlap intervals
 
     series = win[0]
@@ -149,8 +134,6 @@ def spec_transform_save_to_folder(index, win, channel, patient_state, patient, p
     if plot_title:
         plt.title(f"{channel} : is_seizure = {patient_state} : {time_of_observation}")
 
-    series = butter_bandstop_filter(series, 97, 103, FREQ, order=6)
-    series = butter_bandstop_filter(series, 47, 53, FREQ, order=6)
     series = butter_highpass_filter(series, 1, FREQ, order=6)
     
     
@@ -158,14 +141,12 @@ def spec_transform_save_to_folder(index, win, channel, patient_state, patient, p
         # plt.pcolormesh(t, f, Sxx, norm=normalize_color,
         #         cmap='jet')
         plt.specgram(series, cmap='jet', Fs=FREQ, NFFT=interval, noverlap=overlap)
-        plt.ylim(0, 120)
         plt.axis('off')
         
         time_of_observation = str(time_of_observation).replace(":", "-")
         print(f"patient: {patient} time: {time_of_observation}")
 
-        #LOGGING:
-        logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ}")
+        
 
         if patient_state == "seizure":
             plt.savefig(f'{window_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
@@ -209,7 +190,8 @@ def get_info_text(path):
 def create_spec():
     count = 0
     info_obj = get_info_text(info_txt_file_path)
-    for filename in files[-2:]:
+    for filename in files[9:10]:
+        #logging_info_txt(f"len files {len(files)}")
         print("started file: " + str(filename) + " index: " + str(count))
         global FREQ
         FREQ = [find_frq(x) for x in info_obj if find_filename(x) in filename][0] if len([find_frq(x) for x in info_obj if find_filename(x) in filename]) > 0 else 500
@@ -217,7 +199,12 @@ def create_spec():
         sz, prei_one, inter, selected_channels = read_compressed_df(filename)
         patient = re.search('patient_(.*)_date_', filename).group(1)
         print(patient)
+        
         for channel in selected_channels:
+            
+            #LOGGING:
+            logging_info_txt(f"patient: {patient} channel: {channel} FREQ: {FREQ} Value Counts: sz = {len(sz)} prei = {len(prei_one)} int = {len(inter)}")
+
             print(f"channel: " + str(channel))
             if len(inter) > 0 and inter.empty == False:
                 print("inside")
@@ -249,6 +236,12 @@ def create_spec():
 
 
 if __name__ == "__main__":
+    for i, f in enumerate(files):
+        print(f"i: {i} f {f}")
+
     create_spec()
-    # for i, f in enumerate(files):
-    #     print(f"i : {i} f : {f}")
+   
+
+        
+
+    

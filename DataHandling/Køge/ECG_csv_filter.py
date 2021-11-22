@@ -36,21 +36,24 @@ gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 cwd = os.getcwd()
-database_path = '../../Dataset/EMU_monitor(ruc)/'
+database_path = '/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/'
 save_csv_path = '../../Dataset/EMU_monitor(ruc)/NHR/ECG/'
+
+# File types:
 edf_file_type = ".edf"
 capitilize_edf_file_type = ".EDF"
 bdf_file_type = ".BDF"
-patient_one_path = 'chb04/'
-info_df_path = "../../Dataset/EMU_monitor(ruc)/Eventlist_RUC.xlsx"
-external_hardisk_drive_path = os.path.dirname('/Volumes/LaCie/Database/')
-cwd
 
+# internal:
+info_df_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR_Eventlist_RUC.xlsx"
+save_csv_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR/ECG/"
 
-os.chdir("/Volumes/NHR HDD/")
-database_path = "EMU_monitor(ruc)/"
-info_df_path = database_path + "NHR_Eventlist_RUC.xlsx"
-save_csv_path = "Køge/ECG_csv_filtered/"
+# External
+# external_hardisk_drive_path = os.path.dirname('/Volumes/LaCie/Database/')
+# os.chdir("/Volumes/NHR HDD/")
+# database_path = "EMU_monitor(ruc)/"
+# info_df_path = database_path + "NHR_Eventlist_RUC.xlsx"
+#save_csv_path = "Køge/ECG_csv_filtered/"
 
 info_df = pd.read_excel(info_df_path, sheet_name="NHR_ECG")
 
@@ -81,8 +84,6 @@ for i, r in info_df.iterrows():
     if container not in info_list:
         info_list.append(container)
 
-info_list[0:5]
-
 
 class container():
     def __init__(self, delay, time_emu, duration, id):
@@ -110,7 +111,7 @@ for c in info_list:
 def ReadEdfFile(file_name, print_reader_info = False):
     if edf_file_type in file_name or capitilize_edf_file_type in file_name:
         if(print_reader_info):
-            data = mne.io.read_raw_edf(file_name)
+            data = mne.io.read_raw_edf(file_name, verbose='error', exclude=['Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Marker', 'HRV'])
             raw_data = data.get_data()
             converted_raw = pd.DataFrame(raw_data.transpose(), columns=data.ch_names)
             converted_raw_ECG = converted_raw[['ECG']]
@@ -119,7 +120,7 @@ def ReadEdfFile(file_name, print_reader_info = False):
             print(data.info)
             return converted_raw_ECG, data.info
         else:
-            data = mne.io.read_raw_edf(file_name, verbose='error')
+            data = mne.io.read_raw_edf(file_name, verbose='error', exclude=['Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Marker', 'HRV'])
             raw_data = data.get_data()
             converted_raw = pd.DataFrame(raw_data.transpose(), columns=data.ch_names)
             converted_raw_ECG = converted_raw[['ECG']]
@@ -129,7 +130,7 @@ def ReadEdfFile(file_name, print_reader_info = False):
             return converted_raw_ECG, data.info
     if bdf_file_type in file_name:
         if(print_reader_info):
-            data = mne.io.read_raw_bdf(file_name)
+            data = mne.io.read_raw_bdf(file_name, exclude=['Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Marker', 'HRV'])
             raw_data = data.get_data()
             converted_raw = pd.DataFrame(raw_data.transpose(), columns=data.ch_names)
             converted_raw_ECG = converted_raw[['ECG']]
@@ -138,7 +139,7 @@ def ReadEdfFile(file_name, print_reader_info = False):
             print(data.info)
             return converted_raw_ECG, data.info
         else:
-            data = mne.io.read_raw_bdf(file_name, verbose='error')
+            data = mne.io.read_raw_bdf(file_name, verbose='error', exclude=['Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Marker', 'HRV'])
             raw_data = data.get_data()
             converted_raw = pd.DataFrame(raw_data.transpose(), columns=data.ch_names)
             converted_raw_ECG = converted_raw[['ECG']]
@@ -180,18 +181,25 @@ def convert_date_to_ms(date_time):
     if "+" in str(date_time):
         date_time = str(date_time).split("+")[0]
 
+    print(f"datetime: {date_time}")
+
     try:
         timestamp_ms = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+        print(f"timestamp ms: {timestamp_ms}")
     except:
         timestamp_ms = datetime.strptime(date_time, '%d-%m-%Y %H:%M:%S').timestamp() * 1000
+        print(f"timestamp ms: {timestamp_ms}")
     return timestamp_ms
 
 
 def insert_time_stamp(dataframe, file_start_time, frq):
+    print(f"file start meas date {file_start_time}")
     timestamp_ms = convert_date_to_ms(file_start_time)
     period_row_increment_value =  (1 / int(frq)) * 1000
     dataframe.insert(0, "timestamp", [timestamp_ms + i * period_row_increment_value for i in dataframe.index])
+    print("inserted")
 
+class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
 
 def insert_class_col(dataframe, sz_info_list):
     print(f"modtaget string: {sz_info_list}")
@@ -210,18 +218,20 @@ def insert_class_col(dataframe, sz_info_list):
             print(f"sz_start index = {sz_start}")
             print(f"sz_end: {sz_end}")
             preictal_start = sz_start - (15 * 60 * 1000)
+            interictal_start = sz_start - (2 * 60 * 60 * 1000)
+            interictal_end = sz_end + (2 * 60 * 60 * 1000)
             dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
 
             #INSERTING PREICTAL
-            dataframe.loc[(dataframe['class'] != "seizure") & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = "Preictal"
+            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = class_mapping['Preictal']
 
             #INSERTING SEIZURE CLASS
-            dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = "seizure"
+            dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = class_mapping['Seizure']
 
             #INSERTING INTERICTAL
-            dataframe.loc[(dataframe['class'] != "seizure") & (dataframe['class'] != "Preictal"), "class"] = "Interictal"
+            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['class'] != class_mapping['Preictal']) & (dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < interictal_end), "class"] = class_mapping['Interictal']
 
-            print(dataframe["class"].value_counts())
+            print(f"after = len df: {len(dataframe)} values class: \n{dataframe['class'].value_counts()}")
     gc.collect()
 
 
@@ -236,7 +246,7 @@ def df_save_compress(filename, df):
 
 def run_save_pd_csv():
     print(f"len sz info {len(file_sz_info)}")
-    for e in file_sz_info[5:]:
+    for e in file_sz_info:
         print(f"patient_id: {e[0]}")
         print(f"file_name: {e[1]}")
 
@@ -250,10 +260,14 @@ def run_save_pd_csv():
         print(f"freq: {file_sample_rate} meas: {file_meas_date} channels: {relevant_channels}")
         
         insert_time_stamp(df, file_meas_date, file_sample_rate)
+        print("inserted")
         insert_class_col(df, e[2])
 
         save_format_date = str(file_meas_date).replace(":", "").replace("+", "").replace("/","")
         save_file_name = f"patient_{e[0]}_date_{save_format_date}"
+
+        #Only keep rows containing class:
+        df = df[df['class'].isin([class_mapping['Interictal'], class_mapping['Seizure'], class_mapping['Preictal']])]
 
         #SAVE TO CSV
         df_save_compress(save_file_name, df)
@@ -261,12 +275,19 @@ def run_save_pd_csv():
         #LOGGING:
         logging_info_txt(save_file_name, file_sample_rate, file_channel)
 
+        print(f"after isin filter: \n{df['class'].value_counts()}")
+
         #Memory:
         del df, data_info
         gc.collect()
+
+        print("DONE")
 
 
 
 
 if __name__ == "__main__":
+    for i, e in enumerate(file_sz_info):
+        print(f"index: {i}  patient_id: {e[0]}  file_name: {e[1]}")
+
     run_save_pd_csv()
