@@ -2,6 +2,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Acti
 from tensorflow.keras import Model
 from tensorflow.keras.callbacks import ReduceLROnPlateau, Callback, ModelCheckpoint
 from tensorflow.keras.regularizers import l2
+from tensorflow.keras.applications import ResNet152, VGG16
 from datetime import datetime, date
 
 
@@ -42,6 +43,56 @@ def get_shallow_cnn(img_shape):
     )
 
     return model
+
+def get_resnet(img_shape, trainable=False):
+
+    resnet152 = ResNet152(
+        weights='imagenet',
+        include_top=False,
+        input_shape=img_shape
+    )
+
+    for layer in resnet152.layers:
+        layer.trainable = trainable
+    
+    print(f"Loaded resnet152.")
+
+    return resnet152
+
+def get_vgg16(img_shape, trainable=False):
+
+    vgg16 = VGG16(
+        weights="imagenet",
+        include_top=False,
+        input_shape=img_shape
+    )
+
+    for layer in vgg16.layers:
+        layer.trainable = trainable
+
+    print(f"Loaded vgg16.")
+
+    return vgg16
+
+def get_vgg16_resnet152(img_shape, trainable=False):
+
+    resnet = get_resnet(img_shape, trainable)
+    vgg16 = get_vgg16(img_shape, trainable)
+    concat_feature_layer = concatenate([resnet.output, vgg16.output])
+    fully_connected_dense_big = Dense(1024, activation='relu')(concat_feature_layer)
+    dropout_one = Dropout(0.5)(fully_connected_dense_big)
+    flatten_layer = Flatten()(dropout_one)
+    fully_connected_dense_small = Dense(512, activation='relu')(flatten_layer)
+    dropout_two = Dropout(0.5)(fully_connected_dense_small)
+    output = Dense(3, activation='softmax')(dropout_two)
+
+    model = Model(
+        inputs=[resnet.input, vgg16.input],
+        outputs=output
+    )
+
+    return model
+
 
 def reduce_lr():
     return ReduceLROnPlateau(monitor='val_loss', 
