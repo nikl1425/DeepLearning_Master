@@ -35,3 +35,11 @@ def plot_con_matrix(matrix, path, labels=None):
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
     plt.savefig(f"{path}{date.today()}_confus_matrix.png")
+
+def show_batch(image, label, path):
+  plt.figure(figsize=(10,10))
+  for n in range(10):
+      ax = plt.subplot(5,5,n+1)
+      plt.imshow(image[n])
+      plt.title(label[n])
+      plt.axis('off')

@@ -23,7 +23,7 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 # Helpers:
 from util import check_invalid_files, inspect_class_distribution, get_lowest_distr, limit_data, shuffle_order_dataframes
-from model import get_shallow_cnn, reduce_lr, checkpoint, save_history, save_model
+from model import get_shallow_cnn, get_vgg16_resnet152, reduce_lr, checkpoint, save_history, save_model
 from generator import create_batch_generator, create_test_generator
 from plot import plot_con_matrix, evaluate_training_plot
 

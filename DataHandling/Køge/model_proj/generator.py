@@ -6,6 +6,9 @@ rescale = 1./255,
 validation_split=0.2
 )
 
+def custom_sequence_dual_gen():
+    pass
+
 def create_data_generator(data_gen_one, data_gen_two):
     while(True):
         _gen1, _gen1_l = next(data_gen_one)
