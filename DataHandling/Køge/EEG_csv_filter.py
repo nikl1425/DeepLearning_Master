@@ -149,7 +149,7 @@ def insert_time_stamp(dataframe, file_start_time, frq):
 
 class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
 
-def insert_class_col(dataframe, sz_info_list):
+def insert_class_col(dataframe, sz_info_list, class_mapping):
     print(f"sz_info_list: {sz_info_list}")
     
     if "class" not in dataframe.columns:
@@ -183,8 +183,8 @@ def insert_class_col(dataframe, sz_info_list):
     gc.collect()
 
 
-def logging_info_txt(csv_file_name, freq, channels):
-    file_object = open(save_csv_path + "info.txt", "a")
+def logging_info_txt(csv_file_name, save_path, freq, channels):
+    file_object = open(save_path + "info.txt", "a")
     file_object.write(f"\nfilename: {csv_file_name} \n freq: {freq} \n channels: {channels} \n")
     file_object.close()
 
