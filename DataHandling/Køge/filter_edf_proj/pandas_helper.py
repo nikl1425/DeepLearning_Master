@@ -80,6 +80,7 @@ def read_edf_file(file_name, print_reader_info = False):
             return converted_raw, data.info
 
 def insert_time_stamp(dataframe, file_start_time, frq, date_converter):
+    print(f"file start meas date {file_start_time}")
     timestamp_ms = date_converter(file_start_time)
     period_row_increment_value =  (1 / int(frq)) * 1000
     dataframe.insert(0, "timestamp", [timestamp_ms + i * period_row_increment_value for i in dataframe.index])

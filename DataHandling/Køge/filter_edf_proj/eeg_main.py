@@ -21,7 +21,7 @@ from tensorflow.keras import layers, models, Sequential
 from matplotlib import pyplot as plt
 from scipy import signal
 
-from DataHandling.Køge.filter_edf_proj.pandas_helper import create_seizure_list, format_unique_list
+
 plt.ioff()
 import psutil
 import gc
@@ -33,7 +33,7 @@ print(f"Pandas {pd.__version__}")
 print(f"Scikit-Learn {sk.__version__}")
 
 # Custom Modules
-from pandas_helper import read_excel_to_df, format_unique_list, read_edf_file, insert_time_stamp, insert_class_col, df_save_compress, get_class_map
+from pandas_helper import read_excel_to_df, format_unique_list, read_edf_file, insert_time_stamp, insert_class_col, df_save_compress, get_class_map, create_seizure_list
 from util import convert_date_to_ms, downcast_dtypes, mem_usage, logging_info_txt
 
 
@@ -63,7 +63,7 @@ for i, r in info_df.iterrows():
             full_path_patient_file = database_path + f"EEG/{patient_folder}/{EEG_file}"
             info_df.loc[i, "fullPath"] = full_path_patient_file
 
-info_list = format_unique_list("patientID", "fullPath", "ID", "File")
+info_list = format_unique_list(info_df, "patientID", "fullPath", "ID", "File")
 
 file_sz_info = create_seizure_list(info_list, "File", "ID")
 
