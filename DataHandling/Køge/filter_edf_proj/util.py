@@ -8,12 +8,13 @@ def convert_date_to_ms(date_time):
         date_time = str(date_time).split("+")[0]
 
     try:
-        timestamp_ms = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+        timestamp_ms = datetime.utcnow().strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000
     except:
-        timestamp_ms = datetime.strptime(date_time, '%d-%m-%Y %H:%M:%S').timestamp() * 1000
+        timestamp_ms = datetime.utcnow().strptime(date_time, '%d-%m-%Y %H:%M:%S').timestamp() * 1000
     return timestamp_ms
 
 def logging_info_txt(csv_file_name, save_path, freq, channels):
+    print("logging")
     file_object = open(save_path + "info.txt", "a")
     file_object.write(f"\nfilename: {csv_file_name} \n freq: {freq} \n channels: {channels} \n")
     file_object.close()

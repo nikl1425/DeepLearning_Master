@@ -290,4 +290,4 @@ if __name__ == "__main__":
     for i, e in enumerate(file_sz_info):
         print(f"index: {i}  patient_id: {e[0]}  file_name: {e[1]}")
 
-    run_save_pd_csv()
+    #run_save_pd_csv()

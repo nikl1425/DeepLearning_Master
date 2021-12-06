@@ -3,6 +3,8 @@ import mne
 import numpy as np
 import gc
 
+from util import logging_info_txt
+
 def read_excel_to_df(path, sheet_name=None, sheet_mode=False):
     if sheet_mode:
         try:
@@ -32,7 +34,7 @@ class container():
         self.duration = duration
         self.id = id
 
-def create_seizure_list(list_object, index_val1, index_val2):
+def create_seizure_list(list_object, df_object, index_val1, index_val2):
 
     sz_info = []
 
@@ -42,7 +44,7 @@ def create_seizure_list(list_object, index_val1, index_val2):
         print(f"create sz info f: {f}")
         cont_storage = []
         sz_count = 0
-        for i, r in list_object.iterrows():
+        for i, r in df_object.iterrows():
             if f == r['fullPath']:
                 con = container(delay=r['delay'], time_emu=r['time_emu'], duration=r['seizureDuration'], id=r['SeizureID'])
                 cont_storage.append(con)
@@ -91,38 +93,50 @@ def get_class_map():
     return class_mapping
 
 
-def insert_class_col(dataframe, sz_info_list, date_converter):
+def insert_class_col(dataframe, sz_info_list, date_converter, save_filename, save_path, file_sample_rate, file_channel):
     print(f"sz_info_list: {sz_info_list}")
     
-    if "class" not in dataframe.columns:
-        dataframe.insert(0, "class", np.nan)
+    for index, container in enumerate(sz_info_list):
+        delay = container.delay * 1000
+        duration = container.duration * 1000
+        sz_start = date_converter(container.time_emu) + delay
+        sz_end = sz_start + duration
+        print(f"sz_start index = {sz_start}")
+        print(f"sz_end: {sz_end}")
+        preictal_start = sz_start - (15 * 60 * 1000)
+        interictal_start = sz_start - (1 * 60 * 60 * 1000)
+        interictal_end = sz_end + (1 * 60 * 60 * 1000)
+        dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
 
-    if len(sz_info_list) == 0:
-        dataframe.loc[(dataframe['class'] != "Seizure") & (dataframe['class'] != "Preictal I") & (dataframe['class'] != "Preictal II"), "class"] = "Interictal"
-    else:
-        for container in sz_info_list:
-            delay = container.delay * 1000
-            duration = container.duration * 1000
-            sz_start = date_converter(container.time_emu) + delay
-            sz_end = sz_start + duration
-            print(f"sz_start index = {sz_start}")
-            print(f"sz_end: {sz_end}")
-            preictal_start = sz_start - (15 * 60 * 1000)
-            interictal_start = sz_start - (2 * 60 * 60 * 1000)
-            interictal_end = sz_end + (2 * 60 * 60 * 1000)
-            dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
+        #INSERTING PREICTAL
+        prei_df = dataframe[(dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start)]
+        print(f"len prei: {len(prei_df)}")
+        df_save_compress(f"Preictal_{index}_{save_filename}", save_path + "/Preictal", prei_df)
+        logging_info_txt(f"Preictal_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
+        
+        #INSERTING SEIZURE CLASS
+        sz_df = dataframe[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end)]
+        print(f"len sz: {len(sz_df)}")
+        df_save_compress(f"Seizure_{index}_{save_filename}", save_path + "/Seizure", sz_df)
+        logging_info_txt(f"Seizure_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
-            #INSERTING PREICTAL
-            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = class_mapping['Preictal']
+        #INSERTING INTERICTAL
+        pre_int_df = dataframe[(dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < preictal_start)]
+        print(f"len pre int: {len(pre_int_df)}")
+        df_save_compress(f"PreInt_{index}_{save_filename}", save_path + "/Interictal", pre_int_df)
+        logging_info_txt(f"PreInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
-            #INSERTING SEIZURE CLASS
-            dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = class_mapping['Seizure']
+        post_int_df = dataframe[(dataframe['timestamp'] >= sz_end) & (dataframe['timestamp'] < interictal_end)]
+        print(f"len post int: {len(post_int_df)}")
+        df_save_compress(f"PostInt_{index}_{save_filename}", save_path + "/Interictal", post_int_df)
+        logging_info_txt(f"PostInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
-            #INSERTING INTERICTAL
-            dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['class'] != class_mapping['Preictal']) & (dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < interictal_end), "class"] = class_mapping['Interictal']
+        #print(f"after = len df: {len(dataframe)} values class: \n {dataframe['class'].value_counts()}")
+        
+        # clean up
+        del pre_int_df, post_int_df, sz_df, prei_df
+        gc.collect()
 
-            print(f"after = len df: {len(dataframe)} values class: \n {dataframe['class'].value_counts()}")
-    gc.collect()
 
 def df_save_compress(filename, save_path, df):
     df.to_csv(f"{save_path}/{filename}.csv")

@@ -32,7 +32,6 @@ database_path = '/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_
 info_df_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR_Eventlist_RUC.xlsx"
 save_csv_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/NHR/ECG/"
 
-
 # External
 # external_hardisk_drive_path = os.path.dirname('/Volumes/LaCie/Database/')
 # os.chdir("/Volumes/NHR HDD/")
@@ -40,7 +39,7 @@ save_csv_path = "/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_
 # info_df_path = database_path + "NHR_Eventlist_RUC.xlsx"
 #save_csv_path = "Køge/ECG_csv_filtered/"
 
-info_df = pd.read_excel(info_df_path, sheet_name="NHR_ECG", sheet_mode=True)
+info_df = pd.read_excel(info_df_path, sheet_name="NHR_ECG")
 
 for i, r in info_df.iterrows():
     patient_id = r['patientID']
@@ -54,7 +53,7 @@ for i, r in info_df.iterrows():
 
 info_list = format_unique_list(info_df, "patientID", "fullPath", "ID", "File")
 
-file_sz_info = create_seizure_list(info_list, "File", "ID")
+file_sz_info = create_seizure_list(info_list, info_df, "File", "ID")
 
 class_mapping = get_class_map()
 
@@ -72,27 +71,32 @@ def run_save_pd_csv():
         file_meas_date = data_info["meas_date"]
         file_channel = data_info['ch_names']
         relevant_channels = file_channel[0:2]
-        print(f"freq: {file_sample_rate} meas: {file_meas_date} channels: {relevant_channels}")
+        print(f"freq: {file_sample_rate} meas: {file_meas_date} channels: {file_channel}")
         
         insert_time_stamp(df, file_meas_date, file_sample_rate, convert_date_to_ms)
-        insert_class_col(df, e[2], convert_date_to_ms)
+        
 
         save_format_date = str(file_meas_date).replace(":", "").replace("+", "").replace("/","")
         save_file_name = f"patient_{e[0]}_date_{save_format_date}"
 
+        insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
+
         #Only keep rows containing class:
-        df = df[df['class'].isin([class_mapping['Interictal'], class_mapping['Seizure'], class_mapping['Preictal']])]
+        #df = df[df['class'].isin([class_mapping['Interictal'], class_mapping['Seizure'], class_mapping['Preictal']])]
 
         #SAVE TO CSV
-        df_save_compress(save_file_name, save_csv_path, df)
+        #df_save_compress(save_file_name, save_csv_path, df)
 
         #LOGGING:
-        logging_info_txt(save_file_name, file_sample_rate, file_channel)
+        #logging_info_txt(save_csv_path, save_file_name, file_sample_rate, file_channel)
 
-        print(f"after isin filter: \n{df['class'].value_counts()}")
+        #print(f"after isin filter: \n{df['class'].value_counts()}")
 
         #Memory:
         del df, data_info
         gc.collect()
 
         print("DONE")
+
+if __name__ == "__main__":
+    run_save_pd_csv()
