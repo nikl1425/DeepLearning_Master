@@ -26,7 +26,6 @@ plt.ioff()
 import psutil
 import gc
 import glob
-matplotlib.use('Qt5Agg')
 
 print(f"Python {sys.version}")
 print(f"Pandas {pd.__version__}")
