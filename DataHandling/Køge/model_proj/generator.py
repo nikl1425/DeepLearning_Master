@@ -66,10 +66,7 @@ class custom_generator(tf.keras.utils.Sequence):
         return self.len // self.batch_size
 
 
-generator = ImageDataGenerator(
-rescale = 1./255, 
-validation_split=0.2
-)
+generator = ImageDataGenerator(rescale = 1./255)
 
 def custom_sequence_dual_gen():
     pass
@@ -134,24 +131,22 @@ def create_batch_generator(df_a, df_b, img_shape, batch_size=10):
 
     return multi_train_generator, multi_validation_generator, train_samples, val_samples
 
-def create_test_generator(df_a, df_b, img_shape, batch_size=1):
-    test_gen1 = generator.flow_from_dataframe(
-    df_a,
+def test_generator(ecg_path, eeg_path, img_shape, batch_size=1):
+    test_gen1 = generator.flow_from_directory(
+    ecg_path,
     batch_size=batch_size, 
     target_size=img_shape, 
     shuffle=False,
     color_mode="rgb",
-    class_mode="categorical",
-    subset="validation")
+    class_mode="categorical")
 
     test_gen2 = generator.flow_from_dataframe(
-        df_b,
+        eeg_path,
         batch_size=1, 
         target_size=img_shape, 
         shuffle=False,
         color_mode="rgb",
-        class_mode="categorical",
-        subset="validation")
+        class_mode="categorical")
     
     test_steps = test_gen1.samples // batch_size
 

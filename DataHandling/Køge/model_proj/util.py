@@ -4,6 +4,7 @@ import os
 import random
 import pandas as pd
 import numpy as np
+import shutil
 
 def check_invalid_files(img_path):
     print("check for invalid files")
@@ -63,3 +64,43 @@ def shuffle_order_dataframes(df_a, df_b):
         return df_a, df_b
     print("not same len = not shuffled identically")
     return df_a, df_b
+
+def remove_DSSTORE(path):
+    try:
+        os.remove(path+ "/.DS_Store")
+    except FileNotFoundError as e:
+        print(f"file not found with error: {e}")
+
+
+def create_validation_dir(data_dir, dest_dir, validation_split=0.2):
+    
+    for dir in os.listdir(data_dir):
+        sub_dir = f"{data_dir}/{dir}/"
+        val_split = int(len([x for x in os.listdir(sub_dir)]) * validation_split)
+        print(f"validation split, dir: {sub_dir} n_files: {len([x for x in os.listdir(sub_dir)])} val_split: {val_split} ")
+        filenames = random.sample(os.listdir(sub_dir), val_split)
+
+        f_create_list = ["Seizure", "Interictal", "Preictal"]
+
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+            [os.makedirs(dest_dir + "/" + f) for f in f_create_list]
+            for f in f_create_list:
+                os.makedirs
+
+        for fname in filenames:
+            srcpath = os.path.join(sub_dir, fname)
+            print(srcpath)
+
+            if f_create_list[0] in srcpath:
+                if not os.path.exists(dest_dir + "/" + f_create_list[0] + "/" + fname):
+                    shutil.move(srcpath, dest_dir + "/" + f_create_list[0])
+
+            if f_create_list[1] in srcpath:
+                if not os.path.exists(dest_dir + "/" + f_create_list[1] + "/" + fname):
+                    shutil.move(srcpath, dest_dir + "/" + f_create_list[1])
+
+            if f_create_list[2] in srcpath:
+                if not os.path.exists(dest_dir + "/" + f_create_list[2] + "/" + fname):
+                    shutil.move(srcpath, dest_dir + "/" + f_create_list[2])
+

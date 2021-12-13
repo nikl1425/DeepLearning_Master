@@ -2,6 +2,7 @@
 # Module + packages
 import sys
 import os
+from sklearn.utils import shuffle
 import tensorflow.keras
 import pandas as pd
 import sklearn as sk
@@ -22,18 +23,21 @@ gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 # Helpers:
-from util import check_invalid_files, inspect_class_distribution, get_lowest_distr, limit_data, shuffle_order_dataframes
+from util import create_validation_dir, remove_DSSTORE
 from model import get_shallow_cnn, get_vgg16_resnet152, reduce_lr, checkpoint, save_history, save_model
-from generator import create_batch_generator, create_test_generator
+from generator import create_batch_generator, test_generator, custom_generator
 from plot import plot_con_matrix, evaluate_training_plot
 
 
 external_hdd_path = "/Volumes/NHR HDD/Køge_02/"
 os.chdir(external_hdd_path)
 print(os.getcwd())
+
 eeg_img_path =  "Windows/EEG/Images/"
 ecg_img_path = "Windows/EKG/Images/"
-batch_size = 18
+val_eeg_img_path = "Windows/EEG/Images/validation/"
+val_ecg_img_path = "Windows/ECG/Images/validation/"
+b_size = 5
 eval_path = "shallow_eval/"
 
 def get_img_input_shape(for_model=False):
@@ -42,29 +46,13 @@ def get_img_input_shape(for_model=False):
     return (299, 299)
 
 def run():
+    remove_DSSTORE(eeg_img_path)
 
-    try:
-        os.remove(eeg_img_path + "/.DS_Store")
-    except FileNotFoundError as e:
-        print(f"file not found with error: {e}")
+    create_validation_dir(eeg_img_path, val_eeg_img_path)
+    create_validation_dir(ecg_img_path, val_ecg_img_path)
 
     #check_invalid_files(eeg_img_path)
     #check_invalid_files(ecg_img_path)
-
-    eeg_class_dist = inspect_class_distribution(eeg_img_path)
-    ecg_class_dist = inspect_class_distribution(ecg_img_path)
-    print(f"eeg distribution: {eeg_class_dist} \n ecg distribution: {ecg_class_dist}")
-
-    print(f"Lowest distributed class: {get_lowest_distr(eeg_class_dist, ecg_class_dist)}")
-    max_n_images = get_lowest_distr(ecg_class_dist, eeg_class_dist)
-
-    balanced_ecg_data = limit_data(ecg_img_path, n=max_n_images).sort_values(by=['class']).reset_index(drop=True)
-    balanced_eeg_data = limit_data(eeg_img_path, n=max_n_images).sort_values(by=['class']).reset_index(drop=True)
-
-    print(f"balance ecg df: {balanced_ecg_data['class'].value_counts()}")
-    print(f"balance eeg df: {balanced_eeg_data['class'].value_counts()}")
-
-    balanced_eeg_data, balanced_ecg_data = shuffle_order_dataframes(balanced_eeg_data, balanced_ecg_data)
 
     model = get_shallow_cnn(get_img_input_shape(True))
 
@@ -89,18 +77,15 @@ def run():
         metrics=[tensorflow.keras.metrics.CategoricalAccuracy()]
     )
 
-    train_gen, val_gen, train_sam, val_sam = create_batch_generator(
-        balanced_eeg_data,
-        balanced_ecg_data,
-        get_img_input_shape(),
-        batch_size)
+    train_gen = custom_generator(ecg_path=ecg_img_path,
+                                eeg_path=eeg_img_path,
+                                batch_size=b_size,
+                                img_shape=get_img_input_shape(for_model=True),
+                                shuffle=True)
 
     history = model.fit(
         train_gen,
         epochs=2,
-        steps_per_epoch = train_sam//batch_size, 
-        validation_data=val_gen, 
-        validation_steps = val_sam//batch_size,
         callbacks=[checkpoint(), reduce_lr()]
     )
 
@@ -109,9 +94,9 @@ def run():
     evaluate_training_plot(history, eval_path, same_plot=True)
     evaluate_training_plot(history, eval_path, same_plot=False)
 
-    test_gen, test_step, y_true = create_test_generator(balanced_eeg_data,
-                                                        balanced_ecg_data,
-                                                        get_img_input_shape())
+    test_gen, test_step, y_true = test_generator(val_ecg_img_path, 
+                                                 val_eeg_img_path,
+                                                 get_img_input_shape())
     pred = model.predict(test_gen, steps=test_step)
     y_pred = pred.argmax(axis=-1)
     labels = ['Interictal', 'Preictal', 'Seizure']
