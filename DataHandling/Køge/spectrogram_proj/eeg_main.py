@@ -26,7 +26,7 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 # Import custom function:
 from pandas_helper import get_max_window_iteration, get_window, read_compressed_df
 from util import get_info_text, find_frq, find_filename, find_channel, logging_info_txt
-from spectrogram import spec_transform_save_to_folder
+from spectrogram import spec_save_to_folder, multitaper_spec_save_to_folder
 
 # Globals:
 cwd = os.getcwd()
@@ -74,21 +74,21 @@ def create_spec():
                 if "Interictal" in filename:
                     inter_win = [get_window(channel=channel,start_index=i, data=df) for i in range(get_max_window_iteration(df, 4))]
                     for index, window in enumerate(inter_win):
-                        spec_transform_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state = "interictal")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state = "interictal")
                         del window
                     del inter_win
 
                 if "Seizure" in filename:
                     sz_win = [get_window(channel=channel, start_index=i, data=df, is_sezure=True) for i in range(get_max_window_iteration(df, 2))]
                     for index, window in enumerate(sz_win):
-                        spec_transform_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="seizure")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="seizure")
                         del window
                     del sz_win
 
                 if  "Preictal" in filename:
                     prei_one_win = [get_window(channel=channel,start_index=i, data=df) for i in range(get_max_window_iteration(df, 4))]
                     for index, window in enumerate(prei_one_win):
-                        spec_transform_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="prei_one")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="prei_one")
                         del window
                     del prei_one_win
 
