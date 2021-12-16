@@ -1,4 +1,3 @@
-
 # Module + packages
 import sys
 import os
@@ -12,6 +11,7 @@ from skimage.restoration import (denoise_wavelet, estimate_sigma)
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from sklearn.metrics import classification_report, confusion_matrix
+from DataHandling.Køge.model_proj.generator import custom_generator_three_input
 
 print(f"Tensor Flow Version: {tf.__version__}")
 print(f"Keras Version: {tensorflow.keras.__version__}")
@@ -25,36 +25,70 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 # Helpers:
 from util import create_validation_dir, remove_DSSTORE
 from model import get_shallow_cnn, get_vgg16_resnet152, reduce_lr, checkpoint, save_history, save_model
-from generator import create_batch_generator, test_generator, custom_generator
+from generator import create_batch_generator, test_generator, custom_generator_three_input
 from plot import plot_con_matrix, evaluate_training_plot
 
 
-external_hdd_path = "/Volumes/NHR HDD/Køge_02/"
-os.chdir(external_hdd_path)
+# Ubuntu Path Route:
+external_hdd_path = "/media/deepm/NHR HDD/"
+external_proj_path = "Køge_04/"
+os.chdir(external_hdd_path + external_proj_path)
+
+# Mac Path Route:
+external_hdd_path = "/Volumes/NHR HDD/"
+external_proj_path = "Køge_04/"
+os.chdir(external_hdd_path + external_proj_path)
 print(os.getcwd())
 
-eeg_img_path =  "Windows/EEG/Images/"
-ecg_img_path = "Windows/EKG/Images/"
+# Folders
+png_path = "Windows/"
+train_path = "train/"
+validation_path = "validation"
+eeg_all_freq_png = "EEG_ALL_FREQ/"
+eeg_low_freq_png = "EEG_LOW_FREQ/"
+ecg_png = "ECG/"
+
+
 val_eeg_img_path = "Windows/EEG/Images/validation/"
-val_ecg_img_path = "Windows/ECG/Images/validation/"
-b_size = 5
-eval_path = "shallow_eval/"
+val_ecg_img_path = "Windows/ECG/validation/"
+eval_path = "model_evaluation/"
+
+# Training sets:
+eeg_all_train_path = f"{png_path}{train_path}{eeg_all_freq_png}"
+eeg_low_train_path = f"{png_path}{train_path}{eeg_low_freq_png}"
+ecg_train_path = f"{png_path}{train_path}{ecg_png}"
+
+# Validation sets:
+eeg_all_validation_path = f"{png_path}{train_path}{eeg_all_freq_png}"
+eeg_low_validation_path = f"{png_path}{train_path}{eeg_low_freq_png}"
+ecg_validation_path = f"{png_path}{train_path}{ecg_png}"
+
+# Training Config:
+epoch_train = 20
+b_size = 20
+start_lr = 0.0005
+loss_function = "categorical_crossentropy"
+
 
 def get_img_input_shape(for_model=False):
     if for_model:
-        return(299,299,3)
-    return (299, 299)
+        return(224,224,3)
+    return (224, 224)
 
 def run():
-    remove_DSSTORE(eeg_img_path)
+    remove_DSSTORE(eeg_all_train_path)
+    remove_DSSTORE(eeg_low_train_path)
+    remove_DSSTORE(ecg_train_path)
 
-    create_validation_dir(eeg_img_path, val_eeg_img_path)
-    create_validation_dir(ecg_img_path, val_ecg_img_path)
+    # Creating validation set: Default params = 20% of .png in dir move to val dir
+    # create_validation_dir(eeg_img_path, val_eeg_img_path)
+    # create_validation_dir(ecg_img_path, val_ecg_img_path)
 
+    # Shift OS check files:
     #check_invalid_files(eeg_img_path)
     #check_invalid_files(ecg_img_path)
 
-    model = get_shallow_cnn(get_img_input_shape(True))
+    model = get_vgg16_resnet152(get_img_input_shape(True), trainable=True)
 
     print(model.summary())
 
@@ -69,28 +103,36 @@ def run():
     #                     dpi=96,
     # )
 
-    opt = Adam()
+    opt = Adam(learning_rate=start_lr)
 
     model.compile(
-        loss="categorical_crossentropy",
+        loss=loss_function,
         optimizer=opt,
         metrics=[tensorflow.keras.metrics.CategoricalAccuracy()]
     )
 
-    train_gen = custom_generator(ecg_path=ecg_img_path,
-                                eeg_path=eeg_img_path,
-                                batch_size=b_size,
-                                img_shape=get_img_input_shape(for_model=True),
-                                shuffle=True)
+    train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
+                                            eeg_1_path=eeg_all_train_path,
+                                            eeg_2_path= eeg_low_train_path,
+                                            batch_size=b_size,
+                                            img_shape=get_img_input_shape(for_model=True),
+                                            shuffle=True)
+    validation_gen = custom_generator_three_input(ecg_path=val_ecg_img_path,
+                                                eeg_1_path=eeg_all_train_path,
+                                                eeg_2_path= eeg_low_train_path,
+                                                batch_size=b_size,
+                                                img_shape=get_img_input_shape(for_model=True),
+                                                shuffle=False)
 
     history = model.fit(
         train_gen,
-        epochs=2,
+        epochs=epoch_train,
+        validation_data=validation_gen,
         callbacks=[checkpoint(), reduce_lr()]
     )
 
     save_history(eval_path + "history.txt", history.history)
-    save_model(model, eval_path, "shallow_cnn")
+    save_model(model, eval_path, "cnn")
     evaluate_training_plot(history, eval_path, same_plot=True)
     evaluate_training_plot(history, eval_path, same_plot=False)
 
@@ -99,7 +141,7 @@ def run():
                                                  get_img_input_shape())
     pred = model.predict(test_gen, steps=test_step)
     y_pred = pred.argmax(axis=-1)
-    labels = ['Interictal', 'Preictal', 'Seizure']
+    labels = ["Seizure", "Preictal", "Interictal"]
 
     clf_report = classification_report(y_true=y_true, y_pred=y_pred, target_names=labels)
 

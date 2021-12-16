@@ -18,7 +18,6 @@ def get_covn_base(input_layer, img_shape):
     acti03 = Activation('relu')(covn03)
     pool03 = MaxPooling2D(pool_size=(2,2), padding='same')(acti03)
     covn_base = Dropout(0.2)(pool03)
-
     return covn_base
 
 def get_shallow_cnn(img_shape):
@@ -44,6 +43,32 @@ def get_shallow_cnn(img_shape):
 
     return model
 
+def get_shallow_three_input_cnn(img_shape):
+
+    model_one_input = Input(shape=img_shape)
+    model_one = get_covn_base(model_one_input, img_shape)
+
+    model_two_input = Input(shape=img_shape)
+    model_two = get_covn_base(model_two_input, img_shape)
+
+    model_three_input = Input(shape=img_shape)
+    model_three = get_covn_base(model_two_input, img_shape)
+
+    concat_feature_layer = concatenate([model_one, model_two, model_three])
+    flatten_layer = Flatten()(concat_feature_layer)
+    fully_connected_dense_big = Dense(256, activation='relu', kernel_regularizer=l2(1e-5))(flatten_layer)
+    dropout_one = Dropout(0.3)(fully_connected_dense_big)
+    fully_connected_dense_small = Dense(128, activation='relu', kernel_regularizer=l2(1e-5))(dropout_one)
+    dropout_two = Dropout(0.3)(fully_connected_dense_small)
+    output = Dense(3, activation='softmax')(dropout_two)
+
+    model = Model(
+    inputs=[model_one_input, model_two_input, model_three_input],
+    outputs=output
+    )
+
+    return model
+
 def get_resnet(img_shape, trainable=False):
 
     resnet152 = ResNet152(
@@ -60,7 +85,6 @@ def get_resnet(img_shape, trainable=False):
     return resnet152
 
 def get_vgg16(img_shape, trainable=False):
-
     vgg16 = VGG16(
         weights="imagenet",
         include_top=False,

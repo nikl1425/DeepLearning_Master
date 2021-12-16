@@ -69,12 +69,12 @@ file_sz_info = create_seizure_list(info_list, info_df, "File", "ID")
 class_mapping = get_class_map()
 
 def run_save_pd_csv():
-    for e in file_sz_info:
+    for e in file_sz_info[7:8]:
         print(f"patient_id: {e[0]}")
         print(f"file_name: {e[1]}")
 
         file_path = e[1]
-        df, data_info = read_edf_file(file_path)
+        df, data_info = read_edf_file(file_path, print_reader_info=True)
         df = downcast_dtypes(df)
         file_sample_rate = data_info["sfreq"]
         file_meas_date = data_info["meas_date"]

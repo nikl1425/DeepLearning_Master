@@ -133,31 +133,31 @@ def insert_class_col(dataframe, sz_info_list, date_converter, save_filename, sav
         preictal_start = sz_start - (15 * 60 * 1000)
         interictal_start = sz_start - (1 * 60 * 60 * 1000)
         interictal_end = sz_end + (1 * 60 * 60 * 1000)
-        dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
+        #dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
 
         
 
         #INSERTING SEIZURE CLASS
         sz_df = dataframe[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end)].copy()
         print(f"len sz: {len(sz_df)}")
-        df_save_compress(f"Seizure_{index}_{save_filename}", save_path + "/Seizure", sz_df)
+        #df_save_compress(f"Seizure_{index}_{save_filename}", save_path + "/Seizure", sz_df)
         logging_info_txt(f"Seizure_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
         #INSERTING PREICTAL
         prei_df = dataframe[(dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start) & (dataframe['class'] != class_mapping["Seizure"])].copy()
         print(f"len prei: {len(prei_df)}")
-        df_save_compress(f"Preictal_{index}_{save_filename}", save_path + "/Preictal", prei_df)
+        #df_save_compress(f"Preictal_{index}_{save_filename}", save_path + "/Preictal", prei_df)
         logging_info_txt(f"Preictal_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
         #INSERTING INTERICTAL
         pre_int_df = dataframe[(dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < preictal_start) & (dataframe['class'] != class_mapping["Seizure"]) & (dataframe['class'] != class_mapping["Preictal"]) & (dataframe['class'] == class_mapping['Interictal'])].copy()
         print(f"len pre int: {len(pre_int_df)}")
-        df_save_compress(f"PreInt_{index}_{save_filename}", save_path + "/Interictal", pre_int_df)
+        #df_save_compress(f"PreInt_{index}_{save_filename}", save_path + "/Interictal", pre_int_df)
         logging_info_txt(f"PreInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
         post_int_df = dataframe[(dataframe['timestamp'] >= sz_end) & (dataframe['timestamp'] < interictal_end) & (dataframe['class'] != class_mapping["Seizure"]) & (dataframe['class'] != class_mapping["Preictal"]) & (dataframe['class'] == class_mapping['Interictal'])].copy()
         print(f"len post int: {len(post_int_df)}")
-        df_save_compress(f"PostInt_{index}_{save_filename}", save_path + "/Interictal", post_int_df)
+        #df_save_compress(f"PostInt_{index}_{save_filename}", save_path + "/Interictal", post_int_df)
         logging_info_txt(f"PostInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
         #print(f"after = len df: {len(dataframe)} values class: \n {dataframe['class'].value_counts()}")
