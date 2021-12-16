@@ -1,4 +1,3 @@
-from msilib.schema import Error
 import PIL
 from pathlib import Path
 import os

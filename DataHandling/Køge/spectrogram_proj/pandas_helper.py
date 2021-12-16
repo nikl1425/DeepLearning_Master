@@ -26,7 +26,7 @@ def get_window(channel, start_index, data, size = 4, overlap = 0, is_sezure = Fa
     date_timestamp = ""
 
     try:
-        date_timestamp = datetime.fromtimestamp((data['timestamp'][start:start+1]/1000).tolist()[0]).strftime('%H:%M:%S')
+        date_timestamp = datetime.fromtimestamp(s(data['timestamp'][start:start+1]/1000).tolist()[0]).strftime('%H:%M:%S')
     except:
         date_timestamp = "datetime cannot be converted"
 

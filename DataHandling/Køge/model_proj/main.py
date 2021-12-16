@@ -11,7 +11,6 @@ from skimage.restoration import (denoise_wavelet, estimate_sigma)
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from sklearn.metrics import classification_report, confusion_matrix
-from DataHandling.Køge.model_proj.generator import custom_generator_three_input
 
 print(f"Tensor Flow Version: {tf.__version__}")
 print(f"Keras Version: {tensorflow.keras.__version__}")
@@ -30,9 +29,9 @@ from plot import plot_con_matrix, evaluate_training_plot
 
 
 # Ubuntu Path Route:
-external_hdd_path = "/media/deepm/NHR HDD/"
-external_proj_path = "Køge_04/"
-os.chdir(external_hdd_path + external_proj_path)
+# external_hdd_path = "/media/deepm/NHR HDD/"
+# external_proj_path = "Køge_04/"
+# os.chdir(external_hdd_path + external_proj_path)
 
 # Mac Path Route:
 external_hdd_path = "/Volumes/NHR HDD/"
@@ -43,14 +42,10 @@ print(os.getcwd())
 # Folders
 png_path = "Windows/"
 train_path = "train/"
-validation_path = "validation"
+validation_path = "validation/"
 eeg_all_freq_png = "EEG_ALL_FREQ/"
 eeg_low_freq_png = "EEG_LOW_FREQ/"
 ecg_png = "ECG/"
-
-
-val_eeg_img_path = "Windows/EEG/Images/validation/"
-val_ecg_img_path = "Windows/ECG/validation/"
 eval_path = "model_evaluation/"
 
 # Training sets:
@@ -59,9 +54,9 @@ eeg_low_train_path = f"{png_path}{train_path}{eeg_low_freq_png}"
 ecg_train_path = f"{png_path}{train_path}{ecg_png}"
 
 # Validation sets:
-eeg_all_validation_path = f"{png_path}{train_path}{eeg_all_freq_png}"
-eeg_low_validation_path = f"{png_path}{train_path}{eeg_low_freq_png}"
-ecg_validation_path = f"{png_path}{train_path}{ecg_png}"
+eeg_all_validation_path = f"{png_path}{validation_path}{eeg_all_freq_png}"
+eeg_low_validation_path = f"{png_path}{validation_path}{eeg_low_freq_png}"
+ecg_validation_path = f"{png_path}{validation_path}{ecg_png}"
 
 # Training Config:
 epoch_train = 20
@@ -80,9 +75,7 @@ def run():
     remove_DSSTORE(eeg_low_train_path)
     remove_DSSTORE(ecg_train_path)
 
-    # Creating validation set: Default params = 20% of .png in dir move to val dir
-    # create_validation_dir(eeg_img_path, val_eeg_img_path)
-    # create_validation_dir(ecg_img_path, val_ecg_img_path)
+
 
     # Shift OS check files:
     #check_invalid_files(eeg_img_path)
@@ -152,4 +145,6 @@ def run():
     plot_con_matrix(confusion_matx, eval_path, labels)
 
 if __name__ == "__main__":
-    run()
+    # Creating validation set: Default params = 20% of .png in dir move to val dir
+    create_validation_dir(eeg_all_train_path, eeg_all_validation_path)
+    #run()
