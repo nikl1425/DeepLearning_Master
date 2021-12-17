@@ -78,15 +78,15 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     time_of_observation = str(time_of_observation).replace(":", "-")
     Log_file_path = save_path + "Log.txt"
 
-    #LOGGING:
-    logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
+    # #LOGGING:
+    # logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
 
-    if patient_state == "seizure":
-        plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "interictal":
-        plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "prei_one":
-        plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # if patient_state == "seizure":
+    #     plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "interictal":
+    #     plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "prei_one":
+    #     plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
 
     print(f"SUCCES - patient: {patient} time: {time_of_observation}")
     del series, time_of_observation, f, t, Sxx
@@ -101,16 +101,15 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     gc.collect()
 
 
-def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, save_path, plot_title = False, FREQ = 500):
+def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, save_path, FREQ = 500, decorate=False):
     '''
     Multi taper spectrogram.
     Uses 5 tapers.
     nfft = 1024.
     Nyquist frequency at 40/2 = 20.
     '''
-    plt.ion()
+
     interval = int(FREQ)   # ... the interval size,
-    overlap = int(interval * 0.95)  # ... and the overlap of interval
     series = win[0]
     time_of_observation = win[1]
     plt.figure(figsize=(7,7))
@@ -120,41 +119,43 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
         print(f"error: {e}")
         print(f"patient_state: {patient_state} channel: {channel} index: {index} window: {series}")
     
-    if plot_title:
-        plt.title(f"{channel} : is_seizure = {patient_state} : {time_of_observation}")
+
 
     filt_series = apply_filter(series, FREQ)
-    Sxx, t, f = multitaper_spectrogram(filt_series, 500, window_params=[1, 0.2], num_tapers=2, min_nfft=1024, frequency_range=[0, 500])
+    Sxx, t, f = multitaper_spectrogram(filt_series, 500, window_params=[1, 0.25], num_tapers=2, min_nfft=1024, frequency_range=[0, 40])
     Sxx = nanpow2db(Sxx)
-    x_coords = mesh_coords('time', t, Sxx.shape[1])
-    y_coords = mesh_coords('linear', f, Sxx.shape[0])
-    axes = plt.gca()
-    axes.set_xlim(x_coords.min(), x_coords.max())
-    decorate_axis(axes.xaxis, 'time')
-    decorate_axis(axes.yaxis, 'linear')
-    out = axes.pcolormesh(x_coords, y_coords, Sxx, cmap='jet', shading='auto')
-    plt.sci(out)
-    plt.colorbar(label='Power (dB)')
-    axes.set_xlim(x_coords.min(), x_coords.max())
-    axes.set_ylim(y_coords.min(), y_coords.max())
-    plt.show()
 
-    plt.axis('off')
-    
+    if decorate:
+        plt.title(f"{channel} : is_seizure = {patient_state} : {time_of_observation}")
+        x_coords = mesh_coords('time', t, Sxx.shape[1])
+        y_coords = mesh_coords('linear', f, Sxx.shape[0])
+        axes = plt.gca()
+        axes.set_xlim(x_coords.min(), x_coords.max())
+        decorate_axis(axes.xaxis, 'time')
+        decorate_axis(axes.yaxis, 'linear')
+        out = axes.pcolormesh(x_coords, y_coords, Sxx, cmap='jet', shading='auto')
+        plt.sci(out)
+        plt.colorbar(label='Power (dB)')
+        axes.set_xlim(x_coords.min(), x_coords.max())
+        axes.set_ylim(y_coords.min(), y_coords.max())
+    else:
+        plt.pcolormesh(t, f, Sxx, cmap='jet', shading="auto")
+        plt.axis('off')
+
     time_of_observation = str(time_of_observation).replace(":", "-")
     Log_file_path = save_path + "Log.txt"
 
     #LOGGING:
-  #  logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
+    logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
 
     
 
-    # if patient_state == "seizure":
-    #     plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    # elif patient_state == "interictal":
-    #     plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    # elif patient_state == "prei_one":
-    #     plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    if patient_state == "seizure":
+        plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    elif patient_state == "interictal":
+        plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    elif patient_state == "prei_one":
+        plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
 
     print(f"SUCCES - patient: {patient} time: {time_of_observation}")
     del series, time_of_observation, f, t, Sxx
