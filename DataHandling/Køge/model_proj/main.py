@@ -63,6 +63,7 @@ epoch_train = 20
 b_size = 20
 start_lr = 0.0005
 loss_function = "categorical_crossentropy"
+train_class_distribution = {"Interictal": 3, "Preictal": 3, "Seizure": 1}
 
 
 def get_img_input_shape(for_model=False):
@@ -104,15 +105,21 @@ def run():
         metrics=[tensorflow.keras.metrics.CategoricalAccuracy()]
     )
 
+    '''
+    input A: ECG
+    input B: EEG all frequency
+    input C: EEG low frequency
+    '''
+
     train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
                                             eeg_1_path=eeg_all_train_path,
                                             eeg_2_path= eeg_low_train_path,
                                             batch_size=b_size,
                                             img_shape=get_img_input_shape(for_model=True),
                                             shuffle=True)
-    validation_gen = custom_generator_three_input(ecg_path=val_ecg_img_path,
-                                                eeg_1_path=eeg_all_train_path,
-                                                eeg_2_path= eeg_low_train_path,
+    validation_gen = custom_generator_three_input(ecg_path=ecg_validation_path,
+                                                eeg_1_path=eeg_all_validation_path,
+                                                eeg_2_path= eeg_low_validation_path,
                                                 batch_size=b_size,
                                                 img_shape=get_img_input_shape(for_model=True),
                                                 shuffle=False)
@@ -129,9 +136,10 @@ def run():
     evaluate_training_plot(history, eval_path, same_plot=True)
     evaluate_training_plot(history, eval_path, same_plot=False)
 
-    test_gen, test_step, y_true = test_generator(val_ecg_img_path, 
-                                                 val_eeg_img_path,
-                                                 get_img_input_shape())
+    test_gen, test_step, y_true = test_generator(ecg_path=ecg_validation_path, 
+                                                eeg_1_path=eeg_all_validation_path,
+                                                eeg_2_path=eeg_low_validation_path,
+                                                img_shape=get_img_input_shape())
     pred = model.predict(test_gen, steps=test_step)
     y_pred = pred.argmax(axis=-1)
     labels = ["Seizure", "Preictal", "Interictal"]
@@ -146,5 +154,34 @@ def run():
 
 if __name__ == "__main__":
     # Creating validation set: Default params = 20% of .png in dir move to val dir
-    create_validation_dir(eeg_all_train_path, eeg_all_validation_path)
+
+    '''
+    Only run create_validation_dir:
+    if no validation  split is created.
+    If in need of test split etc.
+    '''
+    #create_validation_dir(eeg_all_train_path, eeg_all_validation_path)
+
+    '''
+    Train and evaluate model.
+    '''
     #run()
+
+    train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
+                                            eeg_1_path=eeg_all_train_path,
+                                            eeg_2_path= eeg_low_train_path,
+                                            batch_size=b_size,
+                                            img_shape=get_img_input_shape(for_model=True),
+                                            shuffle=True,
+                                            class_distribution=train_class_distribution)
+    # validation_gen = custom_generator_three_input(ecg_path=ecg_validation_path,
+    #                                             eeg_1_path=eeg_all_validation_path,
+    #                                             eeg_2_path= eeg_low_validation_path,
+    #                                             batch_size=b_size,
+    #                                             img_shape=get_img_input_shape(for_model=True),
+    #                                             shuffle=False,
+    #                                             class_distribution=train_class_distribution)
+
+    X, y = train_gen[0]
+    X2, y2 = train_gen[0]
+    #print(X)

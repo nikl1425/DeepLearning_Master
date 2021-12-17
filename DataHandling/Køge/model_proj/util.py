@@ -43,7 +43,7 @@ def get_lowest_distr(dict_a, dict_b, dict_c=None):
     concat_dict.append(dict_a)
     concat_dict.append(dict_b)
 
-    if dict_c != None:
+    if dict_c is not None:
         concat_dict.append(dict_c)
 
     for item in concat_dict:
@@ -58,7 +58,7 @@ def get_lowest_distr(dict_a, dict_b, dict_c=None):
                 min_val = item[key]
     return int(min_val)
 
-def limit_data(data_dir, n=0, config = None):
+def limit_data(data_dir, n=0, config = {}):
     """
     Looks in subfolders of data_dir.
     Select n random files.
@@ -67,16 +67,18 @@ def limit_data(data_dir, n=0, config = None):
     """
     a=[]
     if n > 0:
-        if config != None and isinstance(config, dict):
+        mylist = os.listdir(data_dir)
+        if config and isinstance(config, dict): 
             try:
                 for i in os.listdir(data_dir):
-                    check_k = "" if len([key for key, _ in config.items() if key.lower() in data_dir.lower()]) == 0 else [key for key, val in config.items() if key.lower() in data_dir.lower()][0]
+                    check_k = "" if len([key for key, _ in config.items() if key.lower() in i.lower()]) == 0 else [key for key, val in config.items() if key.lower() in i.lower()][0]
                     if check_k != "":
-                        image_path = random.sample(os.listdir(data_dir+'/'+i), n)
+                        n_count = config[check_k] * n if config[check_k] > 0 and check_k in i else n
+                        image_path = random.sample(os.listdir(data_dir+'/'+i), n_count)
                         for k,j in enumerate(image_path):
-                            if k> (config[check_k] * n if config[check_k] > 0 and check_k in data_dir else n) :continue
+                            if k>n_count :continue
                             a.append((f'{data_dir}/{i}/{j}',i))
-                    return pd.DataFrame(a,columns=['filename','class']).reset_index(drop=True)
+                return pd.DataFrame(a,columns=['filename','class']).reset_index(drop=True)
             except:
                 print("The limit dat function has the wrong time and element. Implement key=string, value=int")
 
@@ -98,7 +100,7 @@ def shuffle_order_dataframes(df_a, df_b, df_c=None, testing=True):
     same_len = False
     df_c_passed = False
 
-    if df_c != None:
+    if df_c is not None:
         df_c_passed = True
         same_len = len(df_a) == len(df_b) == len(df_c)
     else:

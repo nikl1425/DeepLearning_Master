@@ -26,7 +26,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         self.eeg_1_path = eeg_1_path
         self.eeg_2_path = eeg_2_path
         self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
-        self.len = len(self.eeg_df)
+        self.len = len(self.eeg_1_df)
         self.n_name = self.ecg_df[self.Y_col].nunique()
         
 
@@ -38,6 +38,13 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         balanced_ecg_data = limit_data(self.ecg_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
         balanced_eeg_1_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
         balanced_eeg_2_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
+
+
+        print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
+        print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
+        print(balanced_eeg_1_data.head())
+        print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
+
         return shuffle_order_dataframes(balanced_eeg_1_data, balanced_eeg_2_data, balanced_ecg_data)
 
     def on_epoch_end(self):
@@ -52,6 +59,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         return image_arr/255.
 
     def __get_output(self, label, num_classes):
+        print(self.n_name)
         categoric_label = self.class_mapping[label]
         return tf.keras.utils.to_categorical(categoric_label, num_classes=num_classes)
 
@@ -143,7 +151,7 @@ def create_batch_generator(df_a, df_b, img_shape, batch_size=10):
 
     return multi_train_generator, multi_validation_generator, train_samples, val_samples
 
-def test_generator(ecg_path, eeg_path, img_shape, batch_size=1):
+def test_generator(ecg_path, eeg_1_path, eeg_2_path, img_shape, batch_size=1):
     """
     Test generator.
     Batch = 1
@@ -152,15 +160,23 @@ def test_generator(ecg_path, eeg_path, img_shape, batch_size=1):
     """
 
     test_gen1 = generator.flow_from_directory(
-    ecg_path,
-    batch_size=batch_size, 
-    target_size=img_shape, 
-    shuffle=False,
-    color_mode="rgb",
-    class_mode="categorical")
+        ecg_path,
+        batch_size=batch_size, 
+        target_size=img_shape, 
+        shuffle=False,
+        color_mode="rgb",
+        class_mode="categorical")
 
     test_gen2 = generator.flow_from_dataframe(
-        eeg_path,
+        eeg_1_path,
+        batch_size=1, 
+        target_size=img_shape, 
+        shuffle=False,
+        color_mode="rgb",
+        class_mode="categorical")
+
+    test_gen3 = generator.flow_from_dataframe(
+        eeg_1_path,
         batch_size=1, 
         target_size=img_shape, 
         shuffle=False,
@@ -172,12 +188,15 @@ def test_generator(ecg_path, eeg_path, img_shape, batch_size=1):
     multi_test_generator = create_data_generator(
         test_gen1,
         test_gen2,
+        test_gen3
     )
 
     # print and validate identical y_true label
     [custom_print(test_gen1.filenames[i], i, x) for i, x in enumerate(test_gen1.classes[0:5])]
 
     [custom_print(test_gen2.filenames[i], i, x) for i, x in enumerate(test_gen2.classes[0:5])]
+
+    [custom_print(test_gen3.filenames[i], i, x) for i, x in enumerate(test_gen2.classes[0:5])]
 
     y_true = test_gen1.classes
 
