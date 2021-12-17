@@ -23,7 +23,7 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 # Helpers:
 from util import create_validation_dir, remove_DSSTORE
-from model import get_shallow_cnn, get_vgg16_resnet152, reduce_lr, checkpoint, save_history, save_model
+from model import get_shallow_cnn, get_vgg16_resnet152, get_shallow_three_input_cnn, reduce_lr, checkpoint, save_history, save_model
 from generator import create_batch_generator, test_generator, custom_generator_three_input
 from plot import plot_con_matrix, evaluate_training_plot
 
@@ -82,7 +82,8 @@ def run():
     #check_invalid_files(eeg_img_path)
     #check_invalid_files(ecg_img_path)
 
-    model = get_vgg16_resnet152(get_img_input_shape(True), trainable=True)
+    #model = get_vgg16_resnet152(get_img_input_shape(True), trainable=True)
+    model = get_shallow_three_input_cnn(img_shape=get_img_input_shape(True))
 
     print(model.summary())
 
@@ -165,15 +166,15 @@ if __name__ == "__main__":
     '''
     Train and evaluate model.
     '''
-    #run()
+    run()
 
-    train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
-                                            eeg_1_path=eeg_all_train_path,
-                                            eeg_2_path= eeg_low_train_path,
-                                            batch_size=b_size,
-                                            img_shape=get_img_input_shape(for_model=True),
-                                            shuffle=True,
-                                            class_distribution=train_class_distribution)
+    # train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
+    #                                         eeg_1_path=eeg_all_train_path,
+    #                                         eeg_2_path= eeg_low_train_path,
+    #                                         batch_size=b_size,
+    #                                         img_shape=get_img_input_shape(for_model=True),
+    #                                         shuffle=True,
+    #                                         class_distribution=train_class_distribution)
     # validation_gen = custom_generator_three_input(ecg_path=ecg_validation_path,
     #                                             eeg_1_path=eeg_all_validation_path,
     #                                             eeg_2_path= eeg_low_validation_path,
@@ -182,6 +183,6 @@ if __name__ == "__main__":
     #                                             shuffle=False,
     #                                             class_distribution=train_class_distribution)
 
-    X, y = train_gen[0]
-    X2, y2 = train_gen[0]
+    # X, y = train_gen[0]
+    # X2, y2 = train_gen[0]
     #print(X)

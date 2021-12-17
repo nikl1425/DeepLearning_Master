@@ -56,11 +56,10 @@ def get_shallow_three_input_cnn(img_shape):
 
     concat_feature_layer = concatenate([model_one, model_two, model_three])
     flatten_layer = Flatten()(concat_feature_layer)
-    fully_connected_dense_big = Dense(256, activation='relu', kernel_regularizer=l2(1e-5))(flatten_layer)
+    fully_connected_dense_big = Dense(256, activation='relu')(flatten_layer)
     dropout_one = Dropout(0.3)(fully_connected_dense_big)
-    fully_connected_dense_small = Dense(128, activation='relu', kernel_regularizer=l2(1e-5))(dropout_one)
-    dropout_two = Dropout(0.3)(fully_connected_dense_small)
-    output = Dense(3, activation='softmax')(dropout_two)
+    fully_connected_dense_small = Dense(128, activation='relu')(dropout_one)
+    output = Dense(3, activation='softmax')(fully_connected_dense_small)
 
     model = Model(
     inputs=[model_one_input, model_two_input, model_three_input],
@@ -121,7 +120,7 @@ def get_vgg16_resnet152(img_shape, trainable=False):
 def reduce_lr():
     return ReduceLROnPlateau(monitor='val_loss', 
                             factor=0.2,
-                            patience=7, 
+                            patience=2, 
                             min_lr=0.00001)
 
 def checkpoint():

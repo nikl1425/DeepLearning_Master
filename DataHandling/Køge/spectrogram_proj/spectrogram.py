@@ -50,7 +50,7 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     '''
     plotting and saving spectrogram in comprehension.
     '''
-    interval = int(FREQ/2)   # ... the interval size,
+    interval = int(FREQ)   # ... the interval size,
     overlap = int(interval * 0.95)  # ... and the overlap of interval
     series = win[0]
     time_of_observation = win[1]
@@ -67,11 +67,13 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     filt_series = apply_filter(series, FREQ)
 
     f, t, Sxx = signal.spectrogram(np.array(filt_series), fs=FREQ, nperseg=interval, noverlap=overlap, window='hann')
+    Sxx = nanpow2db(Sxx)
     #normalize_color= colors.LogNorm(vmin=np.amin(Sxx), vmax=np.amax(Sxx))      
-    Sxx = 10*np.log10(Sxx) 
-    plt.pcolormesh(t, f, Sxx, cmap='jet')
+    #Sxx = 10*np.log10(Sxx) 
+    plt.pcolormesh(t, f[0:40], Sxx[0:40], cmap='jet')
     plt.specgram(filt_series, cmap='jet', Fs=FREQ, NFFT=interval, noverlap=overlap)
     plt.axis('off')
+    plt.show()
     
     time_of_observation = str(time_of_observation).replace(":", "-")
     Log_file_path = save_path + "Log.txt"
@@ -106,11 +108,12 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
     nfft = 1024.
     Nyquist frequency at 40/2 = 20.
     '''
+    plt.ion()
     interval = int(FREQ)   # ... the interval size,
     overlap = int(interval * 0.95)  # ... and the overlap of interval
     series = win[0]
     time_of_observation = win[1]
-
+    plt.figure(figsize=(7,7))
     try:
         series = np.array(series).astype(np.float)
     except Exception as e:
@@ -121,8 +124,7 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
         plt.title(f"{channel} : is_seizure = {patient_state} : {time_of_observation}")
 
     filt_series = apply_filter(series, FREQ)
-
-    Sxx, t, f = multitaper_spectrogram(filt_series, 500, window_params=[1, 0.4], num_tapers=5, min_nfft=1024, frequency_range=[0, 40])
+    Sxx, t, f = multitaper_spectrogram(filt_series, 500, window_params=[1, 0.2], num_tapers=2, min_nfft=1024, frequency_range=[0, 500])
     Sxx = nanpow2db(Sxx)
     x_coords = mesh_coords('time', t, Sxx.shape[1])
     y_coords = mesh_coords('linear', f, Sxx.shape[0])
@@ -135,6 +137,7 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
     plt.colorbar(label='Power (dB)')
     axes.set_xlim(x_coords.min(), x_coords.max())
     axes.set_ylim(y_coords.min(), y_coords.max())
+    plt.show()
 
     plt.axis('off')
     
@@ -142,14 +145,16 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
     Log_file_path = save_path + "Log.txt"
 
     #LOGGING:
-    logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
+  #  logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
 
-    if patient_state == "seizure":
-        plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "interictal":
-        plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "prei_one":
-        plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    
+
+    # if patient_state == "seizure":
+    #     plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "interictal":
+    #     plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "prei_one":
+    #     plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
 
     print(f"SUCCES - patient: {patient} time: {time_of_observation}")
     del series, time_of_observation, f, t, Sxx
