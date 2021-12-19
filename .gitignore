@@ -16,3 +16,17 @@ output.png
 DataHandling/MIT_CHB/hi.png
 MIT_Model/eval.png
 MIT_Model/history.txt
+DataHandling/Køge/filter_edf_proj/__pycache__/pandas_helper.cpython-39.pyc
+DataHandling/Køge/filter_edf_proj/__pycache__/util.cpython-39.pyc
+DataHandling/Køge/model_proj/__pycache__/generator.cpython-39.pyc
+DataHandling/Køge/model_proj/__pycache__/model.cpython-39.pyc
+DataHandling/Køge/model_proj/__pycache__/plot.cpython-39.pyc
+DataHandling/Køge/model_proj/__pycache__/util.cpython-39.pyc
+DataHandling/Køge/foo.csv
+output2.png
+ff2.png
+ff3.png
+DataHandling/Køge/spectrogram_proj/__pycache__/pandas_helper.cpython-39.pyc
+DataHandling/Køge/spectrogram_proj/__pycache__/util.cpython-39.pyc
+DataHandling/Køge/spectrogram_proj/__pycache__/spectrogram.cpython-39.pyc
+DataHandling/Køge/hi.py

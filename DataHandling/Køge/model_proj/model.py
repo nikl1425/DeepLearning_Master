@@ -7,17 +7,24 @@ from datetime import datetime, date
 
 
 def get_covn_base(input_layer, img_shape):
-    input = Conv2D(32, (3,3), padding='same', kernel_regularizer=l2(1e-5), input_shape=img_shape)(input_layer)
-    covn01 = Conv2D(32, (3, 3), kernel_regularizer=l2(1e-5))(input)
-    acti01 = Activation('relu')(covn01)
+    input = Conv2D(64, (3,3), input_shape=img_shape)(input_layer)
+    acti01 = Activation('relu')(input)
     pool01 = MaxPooling2D((2, 2))(acti01)
-    covn02 = Conv2D(64, (3, 3), kernel_regularizer=l2(1e-5))(pool01)
+    covn02 = Conv2D(32, (3, 3), kernel_regularizer=l2(1e-5))(pool01)
     acti02 = Activation('relu')(covn02)
     pool02 = MaxPooling2D(2, 2)(acti02)
-    covn03 = Conv2D(128, (3, 3), kernel_regularizer=l2(1e-5))(pool02)
+    covn03 = Conv2D(32, (3, 3), kernel_regularizer=l2(1e-5))(pool02)
     acti03 = Activation('relu')(covn03)
-    pool03 = MaxPooling2D(pool_size=(2,2), padding='same')(acti03)
-    covn_base = Dropout(0.2)(pool03)
+    covn_base = MaxPooling2D(pool_size=(2,2), padding='same')(acti03)
+    return covn_base
+
+def get_small_covn_base(input_layer, img_shape):
+    covn01 = Conv2D(32, (5,5), padding='same', kernel_regularizer=l2(1e-5), input_shape=img_shape)(input_layer)
+    acti01 = Activation('relu')(covn01)
+    pool01 = MaxPooling2D((3, 3))(acti01)
+    covn02 = Conv2D(16, (5, 5), kernel_regularizer=l2(1e-5))(pool01)
+    acti02 = Activation('relu')(covn02)
+    covn_base = MaxPooling2D(3, 3)(acti02)
     return covn_base
 
 def get_shallow_cnn(img_shape):
@@ -53,6 +60,32 @@ def get_shallow_three_input_cnn(img_shape):
 
     model_three_input = Input(shape=img_shape)
     model_three = get_covn_base(model_two_input, img_shape)
+
+    concat_feature_layer = concatenate([model_one, model_two, model_three])
+    flatten_layer = Flatten()(concat_feature_layer)
+    fully_connected_dense_big = Dense(256, activation='relu')(flatten_layer)
+    dropout_one = Dropout(0.3)(fully_connected_dense_big)
+    fully_connected_dense_small = Dense(128, activation='relu')(dropout_one)
+    output = Dense(3, activation='softmax')(fully_connected_dense_small)
+
+    model = Model(
+    inputs=[model_one_input, model_two_input, model_three_input],
+    outputs=output
+    )
+
+    return model
+
+
+def get_small_three_input_cnn(img_shape):
+
+    model_one_input = Input(shape=img_shape)
+    model_one = get_small_covn_base(model_one_input, img_shape)
+
+    model_two_input = Input(shape=img_shape)
+    model_two = get_small_covn_base(model_two_input, img_shape)
+
+    model_three_input = Input(shape=img_shape)
+    model_three = get_small_covn_base(model_two_input, img_shape)
 
     concat_feature_layer = concatenate([model_one, model_two, model_three])
     flatten_layer = Flatten()(concat_feature_layer)

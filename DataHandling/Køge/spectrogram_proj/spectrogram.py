@@ -1,12 +1,12 @@
 import numpy as np
 from scipy import signal
 import matplotlib
-matplotlib.use('agg')
+#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import psutil
 import gc
 import matplotlib.colors as colors
-from util import logging_info_txt
+#from util import logging_info_txt
 import math
 import warnings
 from scipy.signal.windows import dpss
@@ -51,7 +51,7 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     plotting and saving spectrogram in comprehension.
     '''
     interval = int(FREQ)   # ... the interval size,
-    overlap = int(interval * 0.95)  # ... and the overlap of interval
+    overlap = int(interval/2)  # ... and the overlap of interval
     series = win[0]
     time_of_observation = win[1]
 
@@ -66,13 +66,13 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
 
     filt_series = apply_filter(series, FREQ)
 
-    f, t, Sxx = signal.spectrogram(np.array(filt_series), fs=FREQ, nperseg=interval, noverlap=overlap, window='hann')
+    f, t, Sxx = signal.spectrogram(np.array(filt_series), fs=FREQ, noverlap=overlap, nfft=500, window='hann')
     Sxx = nanpow2db(Sxx)
     #normalize_color= colors.LogNorm(vmin=np.amin(Sxx), vmax=np.amax(Sxx))      
     #Sxx = 10*np.log10(Sxx) 
-    plt.pcolormesh(t, f[0:40], Sxx[0:40], cmap='jet')
-    plt.specgram(filt_series, cmap='jet', Fs=FREQ, NFFT=interval, noverlap=overlap)
-    plt.axis('off')
+    plt.pcolormesh(t, f, Sxx, cmap='jet')
+    #plt.specgram(filt_series, cmap='jet', Fs=FREQ, NFFT=interval, noverlap=overlap)
+    #plt.axis('off')
     plt.show()
     
     time_of_observation = str(time_of_observation).replace(":", "-")
@@ -141,21 +141,22 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
     else:
         plt.pcolormesh(t, f, Sxx, cmap='jet', shading="auto")
         plt.axis('off')
+        plt.show()
 
     time_of_observation = str(time_of_observation).replace(":", "-")
     Log_file_path = save_path + "Log.txt"
 
-    #LOGGING:
-    logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
+    # #LOGGING:
+    # logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
 
     
 
-    if patient_state == "seizure":
-        plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "interictal":
-        plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    elif patient_state == "prei_one":
-        plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # if patient_state == "seizure":
+    #     plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "interictal":
+    #     plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    # elif patient_state == "prei_one":
+    #     plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
 
     print(f"SUCCES - patient: {patient} time: {time_of_observation}")
     del series, time_of_observation, f, t, Sxx

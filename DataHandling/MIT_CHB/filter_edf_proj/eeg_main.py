@@ -20,8 +20,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import layers, models, Sequential
 from matplotlib import pyplot as plt
 from scipy import signal
-
-
 plt.ioff()
 import psutil
 import gc
