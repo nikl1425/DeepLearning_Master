@@ -1,6 +1,8 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
+from scipy.signal import welch
+import gc
 
 def convert_date_to_ms(date_time):
     date_time = str(date_time)
@@ -37,3 +39,15 @@ def downcast_dtypes(df):
     saved_time = (_start - _end) / _start * 100
     #print(f"Saved: {saved_time:.2f}%")
     return df
+
+def find_log_min_max_welch(channels, signal,  filename, log_file, freq=500):
+    for c in channels:
+        _, Pxx = welch(signal[c], fs=freq, window='hanning', detrend=False)
+        Pxx_den_db = 10*np.log10(Pxx)
+        mn = np.min(Pxx_den_db)
+        mx = np.max(Pxx_den_db)
+        file_object = open(log_file, "a")
+        file_object.write(f"\nfilename: {filename} \nchannel: {c} \nmin: {mn} \nmax: {mx} \n")
+        file_object.close()
+        del _, Pxx, mn, mx
+        gc.collect()

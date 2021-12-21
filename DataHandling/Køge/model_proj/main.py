@@ -137,10 +137,10 @@ def run():
     evaluate_training_plot(history, eval_path, same_plot=True)
     evaluate_training_plot(history, eval_path, same_plot=False)
 
-    test_gen, test_step, y_true = test_generator(ecg_path=ecg_validation_path, 
-                                                eeg_1_path=eeg_all_validation_path,
-                                                eeg_2_path=eeg_low_validation_path,
-                                                img_shape=get_img_input_shape())
+    test_gen, test_step, y_true = custom_generator_three_input(ecg_path=ecg_validation_path, 
+                                                               eeg_1_path=eeg_all_validation_path,
+                                                               eeg_2_path=eeg_low_validation_path,
+                                                               img_shape=get_img_input_shape(for_model=True))
     pred = model.predict(test_gen, steps=test_step)
     y_pred = pred.argmax(axis=-1)
     labels = ["Seizure", "Preictal", "Interictal"]

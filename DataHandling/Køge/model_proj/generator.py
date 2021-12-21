@@ -14,7 +14,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
     Pass dict class distribution if adjust class sampling.
     Generate path df upon init.
     """
-    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class'):
+    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', is_test=False):
         self.batch_size = batch_size
         self.img_shape = img_shape
         self.class_distribution = class_distribution
@@ -28,6 +28,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
         self.len = len(self.eeg_1_df)
         self.n_name = self.ecg_df[self.Y_col].nunique()
+        self.is_test = is_test
         
 
     def __generate_data(self):

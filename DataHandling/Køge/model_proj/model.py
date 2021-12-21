@@ -1,11 +1,12 @@
+import tensorflow
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Activation, Input, concatenate, Dense
 from tensorflow.keras import Model
 from tensorflow.keras.callbacks import ReduceLROnPlateau, Callback, ModelCheckpoint
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import ResNet152, VGG16
-from datetime import datetime, date
+from datetime import datetime
 
-
+tensorflow.keras.load_model("")
 def get_covn_base(input_layer, img_shape):
     input = Conv2D(64, (3,3), input_shape=img_shape)(input_layer)
     acti01 = Activation('relu')(input)

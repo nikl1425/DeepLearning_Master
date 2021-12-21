@@ -18,6 +18,8 @@ from matplotlib.ticker import LogLocator, FixedLocator, MaxNLocator, Formatter, 
 Custom filters for EEG and ECG
 '''
 
+from util import logging_info_txt
+
 def butter_highpass_filter(data, cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
@@ -46,15 +48,13 @@ def apply_filter(series, FREQ):
     series = butter_highpass_filter(series, 1, FREQ, order=6)
     return series
 
-def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, plot_title = False, FREQ = 500):
+def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, plot_title = False, FREQ = 256):
     '''
     plotting and saving spectrogram in comprehension.
     '''
     interval = int(FREQ)   # ... the interval size,
-    overlap = int(interval/2)  # ... and the overlap of interval
-    series = win[0]
-    time_of_observation = win[1]
-    
+    overlap = int(interval * 0.95)  # ... and the overlap of interval
+    series = win
 
     try:
         series = np.array(series).astype(np.float)
@@ -63,35 +63,33 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
         print(f"patient_state: {patient_state} channel: {channel} index: {index} window: {series}")
     
     if plot_title:
-        plt.title(f"{channel} : is_seizure = {patient_state} : {time_of_observation}")
+        plt.title(f"{channel} : is_seizure = {patient_state}")
 
     filt_series = apply_filter(series, FREQ)
 
-    f, t, Sxx = signal.spectrogram(np.array(filt_series), fs=FREQ, noverlap=overlap, nfft=500, window='hann')
-    #Sxx = nanpow2db(Sxx)
-    normalize_color= matplotlib.colors.Normalize(vmin=-140.51852532362534, vmax=-91.65698411282305)
+    f, t, Sxx = signal.spectrogram(np.array(filt_series), fs=FREQ, noverlap=overlap, nperseg=interval, nfft=256, window='hann')
+    Sxx = nanpow2db(Sxx)
     #normalize_color= colors.LogNorm(vmin=np.amin(Sxx), vmax=np.amax(Sxx))      
-    Sxx1 = 10*np.log10(Sxx) 
-    plt.pcolormesh(t, f, Sxx1, cmap='jet', norm=normalize_color)
-    plt.colorbar(label='Power (dB)')
+    #Sxx = 10*np.log10(Sxx) 
+    plt.pcolormesh(t, f, Sxx, cmap='jet')
+    #plt.specgram(filt_series, cmap='jet', Fs=FREQ, NFFT=interval, noverlap=overlap)
     #plt.axis('off')
     plt.show()
     
-    time_of_observation = str(time_of_observation).replace(":", "-")
     Log_file_path = save_path + "Log.txt"
 
-    # #LOGGING:
-    # logging_info_txt(f"patient: {patient} channel: {channel} time: {time_of_observation} FREQ: {FREQ} \n", Log_file_path)
+    #LOGGING:
+    logging_info_txt(f"patient: {patient} channel: {channel} FREQ: {FREQ} \n", Log_file_path)
 
-    # if patient_state == "seizure":
-    #     plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    # elif patient_state == "interictal":
-    #     plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
-    # elif patient_state == "prei_one":
-    #     plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}_{time_of_observation}.png', bbox_inches='tight')
+    if patient_state == "seizure":
+        plt.savefig(f'{save_path}Seizure/{patient}_{index}_{channel}.png', bbox_inches='tight')
+    elif patient_state == "interictal":
+        plt.savefig(f'{save_path}Interictal/{patient}_{index}_{channel}.png', bbox_inches='tight')
+    elif patient_state == "prei_one":
+        plt.savefig(f'{save_path}Preictal/{patient}_{index}_{channel}.png', bbox_inches='tight')
 
-    print(f"SUCCES - patient: {patient} time: {time_of_observation}")
-    del series, time_of_observation, f, t, Sxx
+    print(f"SUCCES - patient: {patient} index: {index}")
+    del series, f, t, Sxx
     plt.clf()    
     plt.close()
     # Clear the current axes.
@@ -103,7 +101,7 @@ def spec_save_to_folder(index, win, channel, patient_state, patient, save_path, 
     gc.collect()
 
 
-def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, save_path, FREQ = 500, decorate=False):
+def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, save_path, FREQ = 256, decorate=False):
     '''
     Multi taper spectrogram.
     Uses 5 tapers.
@@ -124,7 +122,7 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
 
 
     filt_series = apply_filter(series, FREQ)
-    Sxx, t, f = multitaper_spectrogram(filt_series, 500, window_params=[1, 0.25], num_tapers=2, min_nfft=1024, frequency_range=[0, 40])
+    Sxx, t, f = multitaper_spectrogram(filt_series, 256, window_params=[1, 0.25], num_tapers=2, min_nfft=1024, frequency_range=[0, 40])
     Sxx = nanpow2db(Sxx)
 
     if decorate:
@@ -140,7 +138,6 @@ def multitaper_spec_save_to_folder(index, win, channel, patient_state, patient, 
         plt.colorbar(label='Power (dB)')
         axes.set_xlim(x_coords.min(), x_coords.max())
         axes.set_ylim(y_coords.min(), y_coords.max())
-        plt.show()
     else:
         plt.pcolormesh(t, f, Sxx, cmap='jet', shading="auto")
         plt.axis('off')

@@ -33,8 +33,8 @@ print(f"Scikit-Learn {sk.__version__}")
 
 # Custom Modules
 from pandas_helper import read_excel_to_df, format_unique_list, read_edf_file, insert_time_stamp, insert_class_col, df_save_compress, get_class_map, create_seizure_list
-from util import convert_date_to_ms, downcast_dtypes, mem_usage, logging_info_txt
-
+from util import convert_date_to_ms, downcast_dtypes, mem_usage, logging_info_txt, find_log_min_max_welch
+from filter import apply_filter
 
 
 patient_one_path = 'chb04/'
@@ -69,7 +69,7 @@ file_sz_info = create_seizure_list(info_list, info_df, "File", "ID")
 class_mapping = get_class_map()
 
 def run_save_pd_csv():
-    for e in file_sz_info[0:1]:
+    for e in file_sz_info:
         print(f"patient_id: {e[0]}")
         print(f"file_name: {e[1]}")
 
@@ -81,23 +81,29 @@ def run_save_pd_csv():
         file_channel = data_info['ch_names']
         relevant_channels = file_channel[0:2]
         print(f"freq: {file_sample_rate} meas: {file_meas_date} channels: {relevant_channels}")
+
+
         
-        # insert_time_stamp(df, file_meas_date, file_sample_rate, convert_date_to_ms)
 
-        # save_format_date = str(file_meas_date).replace(":", "").replace("+", "").replace("/","")
-        # save_file_name = f"patient_{e[0]}_date_{save_format_date}"
+        insert_time_stamp(df, file_meas_date, file_sample_rate, convert_date_to_ms)
 
-        # insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
+        save_format_date = str(file_meas_date).replace(":", "").replace("+", "").replace("/","")
+        save_file_name = f"patient_{e[0]}_date_{save_format_date}"
+
+        for channel in relevant_channels:
+            df[channel] = apply_filter(df[channel], file_sample_rate, low=True)
+            # find_log_min_max_welch(channel, df, save_file_name, f"{save_csv_path}/welch_info.txt", file_sample_rate)
+            
+        
+
+
+
+        insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
 
         #LOGGING:
         #logging_info_txt(save_file_name, save_csv_path, file_sample_rate, file_channel)
 
-        #Only keep rows containing class:
-        #df = df[df['class'].isin([class_mapping['Interictal'], class_mapping['Seizure'], class_mapping['Preictal']])]
-
-        #SAVE TO CSV
-        #df_save_compress(save_file_name, save_csv_path, df)
-
+       
         #Memory:
         del df, data_info
         gc.collect()
