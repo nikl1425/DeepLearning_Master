@@ -26,7 +26,7 @@ def butter_bandstop_filter(data, lowcut, highcut, fs, order):
 def apply_filter(series, FREQ, low=False):
     series = butter_bandstop_filter(series, 97, 103, FREQ, order=4)
     series = butter_bandstop_filter(series, 47, 53, FREQ, order=4)
-    series = butter_highpass_filter(series, 2, FREQ, order=4)
+    series = butter_highpass_filter(series, 1, FREQ, order=4)
     if low:
         series = butter_lowpass_filter(series, 240, FREQ, order=3)
     return series

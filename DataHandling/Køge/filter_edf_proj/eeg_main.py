@@ -92,13 +92,13 @@ def run_save_pd_csv():
 
         for channel in relevant_channels:
             df[channel] = apply_filter(df[channel], file_sample_rate, low=True)
-            # find_log_min_max_welch(channel, df, save_file_name, f"{save_csv_path}/welch_info.txt", file_sample_rate)
+            find_log_min_max_welch(channel, df, save_file_name, f"{save_csv_path}/welch_info2.txt", file_sample_rate)
             
         
 
 
 
-        insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
+        #insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
 
         #LOGGING:
         #logging_info_txt(save_file_name, save_csv_path, file_sample_rate, file_channel)
