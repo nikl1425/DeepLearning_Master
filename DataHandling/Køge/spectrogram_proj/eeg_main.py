@@ -1,5 +1,6 @@
 import sys
 import os
+from scipy.signal.spectral import welch
 import tensorflow.keras
 import pandas as pd
 import sklearn as sk
@@ -25,7 +26,7 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 # Import custom function:
 from pandas_helper import get_max_window_iteration, get_window, read_compressed_df
-from util import get_info_text, find_frq, find_filename, find_channel, logging_info_txt
+from util import get_info_text, find_frq, find_filename, find_channel, logging_info_txt, find_welch_max, find_welch_min
 from spectrogram import spec_save_to_folder, multitaper_spec_save_to_folder
 
 # Globals:
@@ -51,16 +52,21 @@ for folder in os.listdir(external_hardisk_drive_path + "Køge_03/EEG/Csv/"):
 
 window_path = external_hardisk_drive_path + "Køge_03/Windows/EEG/"
 info_txt_file_path = external_hardisk_drive_path + "/Køge_03/EEG/info.txt"
+welch_info_file_path = external_hardisk_drive_path + "/Køge_03/EEG/welch_info.txt"
+
 
 def create_spec():
     count = 0
     info_obj = get_info_text(info_txt_file_path)
+    welch_info = get_info_text(welch_info_file_path)
     print(f"info_obj: {info_obj}")
     for filename in files:
         print("started file: " + str(filename) + " index: " + str(count))
         global FREQ
         FREQ = [find_frq(x) for x in info_obj if find_filename(x) in filename][0] if len([find_frq(x) for x in info_obj if find_filename(x) in filename]) > 0 else 500
         ch = [find_channel(x) for x in info_obj if find_filename(x) in filename][0]
+        min = [find_welch_min(x) for x in welch_info if find_filename(x) in "Seizure_0_patient_4_date_2019-05-21 1556430000.csv"][0]
+        max = [find_welch_max(x) for x in welch_info if find_filename(x) in "Seizure_0_patient_4_date_2019-05-21 1556430000.csv"][0]
         print(f"FREQ Set: {FREQ}")
         df, selected_channels = read_compressed_df(filename, ch)
         if FREQ >= 1000:
@@ -74,21 +80,21 @@ def create_spec():
                 if "Interictal" in filename:
                     inter_win = [get_window(channel=channel,start_index=i, data=df) for i in range(get_max_window_iteration(df, 4))]
                     for index, window in enumerate(inter_win):
-                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state = "interictal")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state = "interictal", w_min=min, w_max=max)
                         del window
                     del inter_win
 
                 if "Seizure" in filename:
                     sz_win = [get_window(channel=channel, start_index=i, data=df, is_sezure=True) for i in range(get_max_window_iteration(df, 2))]
                     for index, window in enumerate(sz_win):
-                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="seizure")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="seizure", w_min=min, w_max=max)
                         del window
                     del sz_win
 
                 if  "Preictal" in filename:
                     prei_one_win = [get_window(channel=channel,start_index=i, data=df) for i in range(get_max_window_iteration(df, 4))]
                     for index, window in enumerate(prei_one_win):
-                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="prei_one")
+                        spec_save_to_folder(channel=channel, index=index, win=window, patient=patient, save_path=window_path, patient_state="prei_one", w_min=min, w_max=max)
                         del window
                     del prei_one_win
 
