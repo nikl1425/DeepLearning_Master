@@ -81,92 +81,71 @@ def read_edf_file(file_name, print_reader_info = False):
             converted_raw = pd.DataFrame(raw_data.transpose(), columns=data.ch_names)
             return converted_raw, data.info
 
-def insert_time_stamp(dataframe, file_start_time, frq, date_converter):
-    timestamp_ms = date_converter(file_start_time)
-    period_row_increment_value =  (1 / int(frq)) * 1000
-    dataframe.insert(0, "timestamp", [timestamp_ms + i * period_row_increment_value for i in dataframe.index])
+def insert_time_stamp(dataframe, file_start_time, FREQ):
+    period_row_increment_value =  (1 / FREQ) * 1000
+    dataframe.insert(0, "timestamp", [file_start_time + i * period_row_increment_value for i in dataframe.index])
 
 class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
 
 def get_class_map():
     return class_mapping
 
+class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
 
-def insert_class_col(dataframe, sz_info_list, date_converter, save_filename, save_path, file_sample_rate, file_channel):
-    print(f"sz_info_list: {sz_info_list}")
+def insert_class_col(dataframe_copy, sz_info_list, save_name, external_hardisk_drive_path):
+    print(f"modtaget string: {sz_info_list}")
+
+    channel_to_save = ['FP1-F7', 'P7-O1', 'FP1-F3', 'F3-C3', 'C3-P3', 'P3-O1', 'FP2-F4', 'F4-C4', 'C4-P4', 'P4-O2']
+
+    dataframe = dataframe_copy[channel_to_save] 
+
+    quarter_ensurance = 15 * 60 * 256
+    
     if "class" not in dataframe.columns:
         dataframe.insert(0, "class", np.nan)
-    file_channel.extend(['timestamp', 'class'])
-    dataframe = dataframe[file_channel]
 
-    # Insert class attributes to ensure that seizure, preictal, interictal does not overlap.
-    for index, container in enumerate(sz_info_list):
-        delay = container.delay * 1000
-        duration = container.duration * 1000
-        sz_start = date_converter(container.time_emu) + delay
-        sz_end = sz_start + duration
-        print(f"sz_start index = {sz_start}")
-        print(f"sz_end: {sz_end}")
-        preictal_start = sz_start - (15 * 60 * 1000)
-        interictal_start = sz_start - (1 * 60 * 60 * 1000)
-        interictal_end = sz_end + (1 * 60 * 60 * 1000)
-        dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
+    print(dataframe.columns)
 
-        # hvis data er sezure tag seizure
-        # hvis data er preictal tag preictal/interictal, men ikke indenfor seizure data.
-        dataframe.loc[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end), "class"] = class_mapping['Seizure']
-        dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start), "class"] = class_mapping['Preictal']
-        dataframe.loc[(dataframe['class'] != class_mapping['Seizure']) & (dataframe['class'] != class_mapping['Preictal']) & (dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < interictal_end), "class"] = class_mapping['Interictal']
+    if len(sz_info_list) == 0:
+        int = dataframe[0:-quarter_ensurance]
+        df_save_compress(external_hardisk_drive_path + "/19-12-csv/" + "Interictal/" + f"{save_name}_none_sz", int)
+        print(f"NO SZ len int {len(int)}")
 
-        print(f"mapping: {class_mapping} \n value counts: \n{dataframe['class'].value_counts()}")
-    
-    print(f"Begginging current number of class in df {dataframe['class'].value_counts()}")
-    # Saving to csv
-    for index, container in enumerate(sz_info_list):
-        delay = container.delay * 1000
-        duration = container.duration * 1000
-        sz_start = date_converter(container.time_emu) + delay
-        sz_end = sz_start + duration
-        print(f"sz_start index = {sz_start}")
-        print(f"sz_end: {sz_end}")
-        preictal_start = sz_start - (15 * 60 * 1000)
-        interictal_start = sz_start - (1 * 60 * 60 * 1000)
-        interictal_end = sz_end + (1 * 60 * 60 * 1000)
-        #dataframe['timestamp'] = pd.to_numeric(dataframe['timestamp'])
-        first = dataframe['timestamp'].iloc[0]
-        last = dataframe['timestamp'].iloc[-1]
-        inside = True if first < sz_start < last else False
+    else:
+        for item in sz_info_list:
+            
+            sz_start = item["sz_start"] * 256
+            sz_end = item["sz_end"] * 256
+            print(f"sz_start index = {sz_start}")
+            print(f"sz_end: {sz_end}")
+            preictal_start = sz_start - (15 * 60 * 256) if (sz_start - (15 * 60 * 256)) >= 0 else 0
+            print(f"prei start {preictal_start}")
+            interictal_start = preictal_start - (60 * 60 * 256) if preictal_start > 0 and preictal_start - (60 * 60 * 256) >= 0 else 0
+            #print(f"dur: {sz_end - sz_start}")
 
-        print(f"inside: {inside}")
+            dataframe.loc[(dataframe.index > sz_start) & (dataframe.index < sz_end), 'class'] = class_mapping['Seizure']
+            dataframe.loc[(dataframe.index > preictal_start) & (dataframe.index < sz_start), 'class'] = class_mapping['Preictal']
+            dataframe.loc[(dataframe.index > interictal_start) & (dataframe.index < preictal_start), 'class'] = class_mapping['Interictal']
 
-        #INSERTING SEIZURE CLASS
-        sz_df = dataframe[(dataframe['timestamp'] >= sz_start) & (dataframe['timestamp'] < sz_end)].copy()
-        print(f"len sz: {len(sz_df)}")
-        #df_save_compress(f"Seizure_{index}_{save_filename}", save_path + "/Seizure", sz_df)
-        logging_info_txt(f"Seizure_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
 
-        #INSERTING PREICTAL
-        prei_df = dataframe[(dataframe['timestamp'] >= preictal_start) & (dataframe['timestamp'] < sz_start) & (dataframe['class'] != class_mapping["Seizure"])].copy()
-        print(f"len prei: {len(prei_df)}")
-        #df_save_compress(f"Preictal_{index}_{save_filename}", save_path + "/Preictal", prei_df)
-        logging_info_txt(f"Preictal_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
+            dataframe['class'][sz_start : sz_end] = class_mapping["Seizure"]
+            dataframe['class'][preictal_start : sz_start] = class_mapping["Preictal"]
+            dataframe['class'][interictal_start : preictal_start] = class_mapping["Interictal"]
+            print(dataframe['class'].value_counts())
 
-        #INSERTING INTERICTAL
-        pre_int_df = dataframe[(dataframe['timestamp'] >= interictal_start) & (dataframe['timestamp'] < preictal_start) & (dataframe['class'] != class_mapping["Seizure"]) & (dataframe['class'] != class_mapping["Preictal"]) & (dataframe['class'] == class_mapping['Interictal'])].copy()
-        print(f"len pre int: {len(pre_int_df)}")
-        #df_save_compress(f"PreInt_{index}_{save_filename}", save_path + "/Interictal", pre_int_df)
-        logging_info_txt(f"PreInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
+            prei = dataframe[(dataframe.index >= preictal_start) & (dataframe.index < sz_start) & (dataframe['class'] != class_mapping["Seizure"])].copy()
+            prei = dataframe[preictal_start:sz_start]
+            df_save_compress(external_hardisk_drive_path + "/19-12-csv/" + "Preictal/" + f"{save_name}_prei_{item['sz_start']}", prei)
+            print(f"prei len {len(prei)}")
 
-        post_int_df = dataframe[(dataframe['timestamp'] >= sz_end) & (dataframe['timestamp'] < interictal_end) & (dataframe['class'] != class_mapping["Seizure"]) & (dataframe['class'] != class_mapping["Preictal"]) & (dataframe['class'] == class_mapping['Interictal'])].copy()
-        print(f"len post int: {len(post_int_df)}")
-        #df_save_compress(f"PostInt_{index}_{save_filename}", save_path + "/Interictal", post_int_df)
-        logging_info_txt(f"PostInt_{index}_{save_filename}", save_path, file_sample_rate, file_channel)
+            sz = dataframe[(dataframe.index >= sz_start) & (dataframe.index < sz_end)].copy()
+            df_save_compress(external_hardisk_drive_path + "/19-12-csv/" + "Seizure/" + f"{save_name}_sz_{item['sz_start']}", sz)
+            print(f"sz len {len(sz)}")
 
-        #print(f"after = len df: {len(dataframe)} values class: \n {dataframe['class'].value_counts()}")
-        
-        # clean up
-        del pre_int_df, post_int_df, sz_df, prei_df
-        gc.collect()
+            int = dataframe[(dataframe.index >= interictal_start) & (dataframe.index < preictal_start) & (dataframe['class'] != class_mapping["Seizure"]) & (dataframe['class'] != class_mapping["Preictal"])].copy()
+            if len(int) > 1*60*256:
+                df_save_compress(external_hardisk_drive_path + "/19-12-csv/" + "Interictal/" + f"{save_name}_int_{item['sz_start']}", int)
+            print(f"int len: {len(int)}")
 
 
 def df_save_compress(filename, save_path, df):

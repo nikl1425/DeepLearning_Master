@@ -25,7 +25,8 @@ import gc
 
 # Custom Modules
 from pandas_helper import read_excel_to_df, format_unique_list, read_edf_file, insert_time_stamp, insert_class_col, df_save_compress, get_class_map, create_seizure_list
-from util import convert_date_to_ms, downcast_dtypes, mem_usage, logging_info_txt
+from util import convert_date_to_ms, downcast_dtypes, mem_usage, logging_info_txt, find_log_min_max_welch
+from filter import apply_ecg_filter
 
 # internal:
 database_path = '/Users/niklashjort/Desktop/Notes/Speciale/projects/Dataset/EMU_monitor(ruc)/'
@@ -66,11 +67,12 @@ def run_save_pd_csv():
 
         file_path = e[1]
         df, data_info = read_edf_file(file_path)
+        df = df[['ECG']]
         df = downcast_dtypes(df)
         file_sample_rate = data_info["sfreq"]
         file_meas_date = data_info["meas_date"]
         file_channel = data_info['ch_names']
-        relevant_channels = file_channel[0:2]
+        relevant_channels = file_channel[0:1]
         print(f"freq: {file_sample_rate} meas: {file_meas_date} channels: {file_channel}")
         
         insert_time_stamp(df, file_meas_date, file_sample_rate, convert_date_to_ms)
@@ -78,6 +80,12 @@ def run_save_pd_csv():
 
         save_format_date = str(file_meas_date).replace(":", "").replace("+", "").replace("/","")
         save_file_name = f"patient_{e[0]}_date_{save_format_date}"
+
+
+        for channel in relevant_channels:
+            df[channel] = apply_ecg_filter(df[channel], file_sample_rate)
+            find_log_min_max_welch(channel, df, save_file_name, f"{save_csv_path}/welch_info.txt", file_sample_rate)
+
 
         insert_class_col(df, e[2], convert_date_to_ms, save_file_name, save_csv_path, file_sample_rate, relevant_channels)
 
