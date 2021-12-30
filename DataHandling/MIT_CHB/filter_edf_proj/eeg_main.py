@@ -68,7 +68,7 @@ def run_save_pd_csv():
                 #edf_df = downcast_dtypes(edf_df)
                 #insert_time_stamp(edf_df, edf_info_container.time_start)
                 #print(f"info list = {edf_info_container.sz_info}")
-                insert_class_col(edf_df, edf_info_container.sz_info, edf_info_container.file_name)
+                insert_class_col(edf_df, edf_info_container.sz_info, edf_info_container.file_name, FREQ)
                 #print(f"filename: {edf_info_container.file_name} classes: {edf_df['class'].value_counts()}")
                 print("-------------------------------------------------------")
                 #print(edf_info_container.file_name)

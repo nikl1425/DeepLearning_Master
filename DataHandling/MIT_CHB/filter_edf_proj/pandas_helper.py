@@ -4,6 +4,7 @@ import numpy as np
 import gc
 
 from util import logging_info_txt
+from filter import apply_filter
 
 def read_excel_to_df(path, sheet_name=None, sheet_mode=False):
     if sheet_mode:
@@ -92,12 +93,16 @@ def get_class_map():
 
 class_mapping = {"Seizure": 1, "Preictal": 2, "Interictal": 3}
 
-def insert_class_col(dataframe_copy, sz_info_list, save_name, external_hardisk_drive_path):
+def insert_class_col(dataframe_copy, sz_info_list, save_name, external_hardisk_drive_path, file_sample_rate):
     print(f"modtaget string: {sz_info_list}")
 
     channel_to_save = ['FP1-F7', 'P7-O1', 'FP1-F3', 'F3-C3', 'C3-P3', 'P3-O1', 'FP2-F4', 'F4-C4', 'C4-P4', 'P4-O2']
 
-    dataframe = dataframe_copy[channel_to_save] 
+    dataframe = dataframe_copy[channel_to_save]
+
+    for channel in dataframe.columns:
+        dataframe[channel] = apply_filter(dataframe[channel], file_sample_rate, low=True)
+        find_log_min_max_welch(channel, dataframe, save_name, f"{external_hardisk_drive_path}/welch_info2.txt", file_sample_rate)
 
     quarter_ensurance = 15 * 60 * 256
     

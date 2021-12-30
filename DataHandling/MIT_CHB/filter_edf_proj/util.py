@@ -1,6 +1,10 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import gc
+import re
+import os
+from scipy.signal import welch
 
 summary_txt_file_type = "-summary.txt"
 edf_file_type = ".edf"
@@ -146,3 +150,68 @@ def sort_remove_files(list_obj):
     if FileInformationContainer(list_obj[x]).get_sz_count() > 0:
       new_lst.append(list_obj[x])
   return new_lst
+
+def nanpow2db(y):
+    if isinstance(y, int) or isinstance(y, float):
+        if y == 0:
+            return np.nan
+        else:
+            ydB = 10 * np.log10(y)
+    else:
+        if isinstance(y, list):  # if list, turn into array
+            y = np.asarray(y)
+        y = y.astype(float)  # make sure it's a float array so we can put nans in it
+        y[y == 0] = np.nan
+        ydB = 10 * np.log10(y)
+
+    return ydB
+
+def find_log_min_max_welch(channel, signal,  filename, log_file, freq=256):
+    '''
+    Calculate Power median of the signal.
+    Mask the PSD if filters creates low power.
+    Then log it to txt and use for pcolormesh normalization.
+    '''
+
+    # PSD w. Welch
+    f, Pxx = welch(signal[channel], fs=freq, window='hanning', scaling='density', average='median', detrend=False)
+    Pxx_den_db = nanpow2db(Pxx)
+
+    # Creating and remove frequencies === False e.g. not in mask
+
+    # mask for low pass filter
+    mask = (f < 240)
+    m_Pxx_den_db = Pxx_den_db[mask]
+    m_f = f[mask]
+
+    # mask for bandpass
+    mask = (m_f < 47) | (m_f > 53)
+    m_Pxx_den_db = m_Pxx_den_db[mask]
+    m_f = m_f[mask]
+    
+    # mask for bandpass
+    mask = (m_f < 97) | (m_f > 103)
+    m_Pxx_den_db = m_Pxx_den_db[mask]
+    m_f = m_f[mask]
+
+    # mask for highpass
+    mask = (m_f > 1)
+    m_Pxx_den_db = m_Pxx_den_db[mask]
+    m_f = m_f[mask]
+
+    # Debugging only:
+    # plt.plot(m_f, m_Pxx_den_db)
+    # plt.savefig("hi.png")
+
+    # Filtered and masked global median min and max value
+    mn = np.min(m_Pxx_den_db)
+    mx = np.max(m_Pxx_den_db)
+
+    # Log file name and value pair
+    file_object = open(log_file, "a")
+    file_object.write(f"\nfilename: {filename} \nchannel: {channel} \nmin: {mn} \nmax: {mx} \n")
+    file_object.close()
+
+    # Garbage collection
+    del f, Pxx, mn, mx, mask, m_Pxx_den_db, m_f
+    gc.collect()

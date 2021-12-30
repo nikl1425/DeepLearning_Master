@@ -4,8 +4,12 @@ import numpy as np
 from tensorflow.keras.utils import Sequence
 import tensorflow as tf
 
-from util import check_invalid_files, inspect_class_distribution, get_lowest_distr, limit_data, shuffle_order_dataframes
+from util import check_invalid_files, inspect_class_distribution, get_lowest_distr, limit_data, shuffle_order_dataframes, create_dataframe_test
 
+
+
+def custom_print(f, i, x):
+    print(f"index : {i}, y_true : {x} : filename : {f}")
 
 class custom_generator_three_input(tf.keras.utils.Sequence):
     """
@@ -30,7 +34,6 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         self.n_name = self.ecg_df[self.Y_col].nunique()
         self.is_test = is_test
         
-
     def __generate_data(self):
         eeg_1_class_dist = inspect_class_distribution(self.eeg_1_path)
         eeg_2_class_dist = inspect_class_distribution(self.eeg_2_path)
@@ -40,7 +43,6 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         balanced_eeg_1_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
         balanced_eeg_2_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
 
-
         print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
         print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
         print(balanced_eeg_1_data.head())
@@ -49,10 +51,10 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         return shuffle_order_dataframes(balanced_eeg_1_data, balanced_eeg_2_data, balanced_ecg_data)
 
     def on_epoch_end(self):
-        if shuffle:
+        if self.shuffle:
             self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
+            print("Shuffled!")
             
-
     def __get_input(self, path, target_size):
         image = tf.keras.preprocessing.image.load_img(path)
         image_arr = tf.keras.preprocessing.image.img_to_array(image)
@@ -88,132 +90,80 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
     def __len__(self):
         return self.len // self.batch_size
 
-
 generator = ImageDataGenerator(rescale = 1./255)
 
-def create_data_generator(data_gen_one, data_gen_two):
-    """
-    Base generator two input model.
-    """
-    while(True):
-        _gen1, _gen1_l = next(data_gen_one)
-        _gen2, _gen2_l = next(data_gen_two)
-
-        yield [_gen1, _gen2], np.array(_gen1_l)
-
-def create_batch_generator(df_a, df_b, img_shape, batch_size=10):
-    input_1_train_gen = generator.flow_from_dataframe(
-        df_a,
-        batch_size=batch_size, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical",
-        subset="training")
-
-    input_2_train_gen = generator.flow_from_dataframe(
-        df_b,
-        batch_size=batch_size, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical",
-        subset="training")
-
-    input_1_validation_gen = generator.flow_from_dataframe(
-        df_a,
-        batch_size=batch_size, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical",
-        subset="validation")
 
 
-    input_2_validation_gen = generator.flow_from_dataframe(
-        df_b,
-        batch_size=batch_size, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical",
-        subset="validation")
 
-    multi_train_generator = create_data_generator(
-        input_1_train_gen,
-        input_2_train_gen
-    )
+class test_generator_three_input(tf.keras.utils.Sequence):
+    '''
+    For test we load all images in the three specified paths into memory as an np.array.
+    We also need a custom data generator for this due to multiple inputs and specific labelling of the classes.
+    All the test folders contains the same number of images so no need to check and random sample / shuffle
+    '''
+    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', is_test=False):
+        self.batch_size = batch_size
+        self.img_shape = img_shape
+        self.class_distribution = class_distribution
+        self.shuffle = shuffle
+        self.X_col = X_col
+        self.Y_col = Y_col
+        self.class_mapping = {"Seizure": 0, "Preictal": 1, "Interictal": 2} # ændre dette
+        self.ecg_path = ecg_path
+        self.eeg_1_path = eeg_1_path
+        self.eeg_2_path = eeg_2_path
+        self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
+        self.len = len(self.eeg_1_df)
+        self.n_name = self.ecg_df[self.Y_col].nunique()
+        self.is_test = is_test
+        
+    def __generate_data(self):
+        balanced_ecg_data = create_dataframe_test(self.ecg_path)
+        balanced_eeg_1_data = create_dataframe_test(self.eeg_1_path)
+        balanced_eeg_2_data = create_dataframe_test(self.eeg_2_path)
 
-    multi_validation_generator = create_data_generator(
-        input_1_validation_gen,
-        input_2_validation_gen
-    )
+        print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
+        print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
+        print(balanced_eeg_1_data.head())
+        print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
 
-    train_samples = input_1_train_gen.samples
-    val_samples = input_1_validation_gen.samples
+        return shuffle_order_dataframes(balanced_eeg_1_data, balanced_eeg_2_data, balanced_ecg_data, testing=True)
 
-    return multi_train_generator, multi_validation_generator, train_samples, val_samples
+    def on_epoch_end(self):
+        if self.shuffle:
+            self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
+            
+    def __get_input(self, path, target_size):
+        image = tf.keras.preprocessing.image.load_img(path)
+        image_arr = tf.keras.preprocessing.image.img_to_array(image)
+        image_arr = tf.image.resize(image_arr,(target_size[0], target_size[1])).numpy()
+        return image_arr/255.
 
-def test_generator(ecg_path, eeg_1_path, eeg_2_path, img_shape, batch_size=1):
-    """
-    Test generator.
-    Batch = 1
-    Shuffle default False.
-    Categorical label
-    """
+    def __get_output(self, label, num_classes):
+        print(self.n_name)
+        categoric_label = self.class_mapping[label]
+        return tf.keras.utils.to_categorical(categoric_label, num_classes=num_classes)
 
-    test_gen1 = generator.flow_from_directory(
-        ecg_path,
-        batch_size=batch_size, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical")
-
-    test_gen2 = generator.flow_from_dataframe(
-        eeg_1_path,
-        batch_size=1, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical")
-
-    test_gen3 = generator.flow_from_dataframe(
-        eeg_1_path,
-        batch_size=1, 
-        target_size=img_shape, 
-        shuffle=False,
-        color_mode="rgb",
-        class_mode="categorical")
+    def __get_data(self, x1_batches, x2_batches, x3_batches):
+        ecg_path_batch = x1_batches[self.X_col]
+        eeg_1_path_batch = x2_batches[self.X_col]
+        eeg_2_path_batch = x3_batches[self.X_col]
     
-    test_steps = test_gen1.samples // batch_size
+        label_batch = x1_batches[self.Y_col]
 
-    multi_test_generator = create_data_generator(
-        test_gen1,
-        test_gen2,
-        test_gen3
-    )
+        x1_batch = np.asarray([self.__get_input(x, self.img_shape) for x in eeg_1_path_batch])
+        x2_batch = np.asarray([self.__get_input(x, self.img_shape) for x in eeg_2_path_batch])
+        x3_batch = np.asarray([self.__get_input(x, self.img_shape) for x in ecg_path_batch])
+        y_batch = np.asarray([self.__get_output(y, self.n_name) for y in label_batch])
 
-    # print and validate identical y_true label
-    [custom_print(test_gen1.filenames[i], i, x) for i, x in enumerate(test_gen1.classes[0:5])]
+        return tuple([x1_batch, x2_batch, x3_batch]), y_batch
 
-    [custom_print(test_gen2.filenames[i], i, x) for i, x in enumerate(test_gen2.classes[0:5])]
+    def __getitem__(self, index):
+        ecg_batches = self.ecg_df[index * self.batch_size:(index + 1) * self.batch_size]
+        eeg_1_batches = self.eeg_1_df[index * self.batch_size:(index + 1) * self.batch_size]
+        eeg_2_batches = self.eeg_2_df[index * self.batch_size:(index + 1) * self.batch_size]
+        X, y = self.__get_data(eeg_1_batches, eeg_2_batches, ecg_batches)        
+        return X, y
 
-    [custom_print(test_gen3.filenames[i], i, x) for i, x in enumerate(test_gen2.classes[0:5])]
-
-    y_true = test_gen1.classes
-
-    
-
-    return multi_test_generator, test_steps, y_true
-
-
-
-
-def custom_print(f, i, x):
-    print(f"index : {i}, y_true : {x} : filename : {f}")
-
-if __name__ == "__main__":
-    class_mapping = {"sz": 1, "non-sz": 0}
-    x = tf.keras.utils.to_categorical(class_mapping["non-sz"], num_classes=2)
-    print(x)
+    def __len__(self):
+        return self.len // self.batch_size
