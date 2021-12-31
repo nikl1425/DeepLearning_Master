@@ -178,49 +178,49 @@ def create_validation_dir(data_dir, dest_dir, validation_split=0.25):
                             shutil.move(srcpath, dest_dir + "/" + f_create_list[2])
                 print(f"Done with {srcpath}")
 
-    def create_test_dir(data_dir, dest_dir, test_split = 0.05, max_num_dict=None):
-        '''
-        This function should only be run when no test set is created.
-        It creates a directory with 3 classes -  if max num is specified it will instead move a number of images over into destination dir.
-        '''
-        f_create_list = ["Seizure", "Interictal", "Preictal"]
+def create_test_dir(data_dir, dest_dir, test_split = 0.05, max_num_dict=None):
+    '''
+    This function should only be run when no test set is created.
+    It creates a directory with 3 classes -  if max num is specified it will instead move a number of images over into destination dir.
+    '''
+    f_create_list = ["Seizure", "Interictal", "Preictal"]
 
-        if os.path.exists(dest_dir):
-            print("Test directory already is created for: ")
-            return None
+    if os.path.exists(dest_dir):
+        print("Test directory already is created for: ")
+        return None
 
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
-            [os.makedirs(dest_dir + "/" + f) for f in f_create_list]
-            print("created dest dir with assosiated folders.")
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+        [os.makedirs(dest_dir + "/" + f) for f in f_create_list]
+        print("created dest dir with assosiated folders.")
 
-            for sub_dir in os.listdir(data_dir):
-                filenames = []
-                num_files_to_move = 0
-                if isinstance(max_num_dict, type(None)):
-                    num_files_to_move = int(len([x for x in os.listdir(sub_dir)]) * test_split)
-                    print(f"sub_dir = {sub_dir} moves : {num_files_to_move} ")
-                else:
-                    num_files_to_move = max_num_dict[sub_dir]
+        for sub_dir in os.listdir(data_dir):
+            filenames = []
+            num_files_to_move = 0
+            if isinstance(max_num_dict, type(None)):
+                num_files_to_move = int(len([x for x in os.listdir(sub_dir)]) * test_split)
+                print(f"sub_dir = {sub_dir} moves : {num_files_to_move} ")
+            else:
+                num_files_to_move = max_num_dict[sub_dir]
 
-                filenames = random.sample(data_dir + "/" + sub_dir + "/")
+            filenames = random.sample(data_dir + "/" + sub_dir + "/")
 
-                for fname in filenames:
-                    srcpath = os.path.join(sub_dir, fname)
+            for fname in filenames:
+                srcpath = os.path.join(sub_dir, fname)
 
-                    if f_create_list[0] in srcpath:
-                        if not os.path.exists(dest_dir + "/" + f_create_list[0] + "/" + fname):
-                            shutil.move(srcpath, dest_dir + "/" + f_create_list[0])
+                if f_create_list[0] in srcpath:
+                    if not os.path.exists(dest_dir + "/" + f_create_list[0] + "/" + fname):
+                        shutil.move(srcpath, dest_dir + "/" + f_create_list[0])
 
-                    if f_create_list[1] in srcpath:
-                        if not os.path.exists(dest_dir + "/" + f_create_list[1] + "/" + fname):
-                            shutil.move(srcpath, dest_dir + "/" + f_create_list[1])
+                if f_create_list[1] in srcpath:
+                    if not os.path.exists(dest_dir + "/" + f_create_list[1] + "/" + fname):
+                        shutil.move(srcpath, dest_dir + "/" + f_create_list[1])
 
-                    if f_create_list[2] in srcpath:
-                        if not os.path.exists(dest_dir + "/" + f_create_list[2] + "/" + fname):
-                            shutil.move(srcpath, dest_dir + "/" + f_create_list[2])
-            
-            print("Created test directory with all subdirs")
+                if f_create_list[2] in srcpath:
+                    if not os.path.exists(dest_dir + "/" + f_create_list[2] + "/" + fname):
+                        shutil.move(srcpath, dest_dir + "/" + f_create_list[2])
+        
+        print("Created test directory with all subdirs")
 
 def inspect_train_samples(data_dir, split=None):
     '''

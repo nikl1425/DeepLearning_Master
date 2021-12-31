@@ -21,46 +21,53 @@ gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 # Helpers:
-from util import create_validation_dir, remove_DSSTORE
+from util import create_validation_dir, create_test_dir, remove_DSSTORE
 from model import get_shallow_cnn, get_vgg16_resnet152, get_shallow_three_input_cnn, reduce_lr, checkpoint, save_history, save_model, load_saved_model, get_small_three_input_cnn
-from generator import create_batch_generator, test_generator, custom_generator_three_input
-from plot import plot_con_matrix, evaluate_training_plot
+from generator import custom_generator_three_input, test_generator_three_input
+from plot import plot_con_matrix, evaluate_training_plot, show_batch
 
 
 # Ubuntu Path Route:
-external_hdd_path = "/media/deepm/NHR HDD/"
-external_proj_path = "Køge_04/"
+# external_hdd_path = "/media/deepm/NHR HDD/"
+# external_proj_path = "Køge_04/"
 #os.chdir(external_hdd_path + external_proj_path)
 
 # Windows Path Route:
-external_hdd_path = "E:/"
-external_proj_path = "Eks_DB/"
-os.chdir(external_hdd_path + external_proj_path)
+# external_hdd_path = "E:/"
+# external_proj_path = "Eks_DB/"
+# os.chdir(external_hdd_path + external_proj_path)
 
 # Mac Path Route:
-#external_hdd_path = "/Volumes/NHR HDD/"
-#external_proj_path = "Køge_04/"
-#os.chdir(external_hdd_path + external_proj_path)
+external_hdd_path = "/Volumes/NHR HDD/"
+external_proj_path = "Eks_DB/"
+os.chdir(external_hdd_path + external_proj_path)
 print("CURRENT DIR: \n" + os.getcwd())
 
 # Folders
-png_path = "MIT/"
+png_path = "Køge/spectrogram/"
 train_path = "train/"
 validation_path = "validation/"
+test_path = "test/"
 eeg_all_freq_png = "EEG_ALL/"
-eeg_low_freq_png = "EEG_LOW_FREQ/"
+eeg_low_freq_png = "EEG_LOW/"
 ecg_png = "ECG/"
 eval_path = "model_evaluation/"
 
 # Training sets:
-eeg_all_train_path = f"{png_path}{eeg_all_freq_png}{train_path}"
+eeg_all_train_path = f"{png_path}{train_path}{eeg_all_freq_png}"
 eeg_low_train_path = f"{png_path}{train_path}{eeg_low_freq_png}"
-ecg_train_path = f"E:/Køge_04/Windows/{train_path}{ecg_png}"
+ecg_train_path = f"{png_path}{train_path}{ecg_png}"
 
 # Validation sets:
 eeg_all_validation_path = f"{png_path}{eeg_all_freq_png}{validation_path}"
 eeg_low_validation_path = f"{png_path}{validation_path}{eeg_low_freq_png}"
-ecg_validation_path = f"E:/Køge_04/Windows/{validation_path}{ecg_png}"
+ecg_validation_path = f"{png_path}{validation_path}{ecg_png}"
+
+
+# Test sets:
+eeg_all_test_path = f"{png_path}{test_path}{eeg_all_freq_png}"
+eeg_low_test_path = f"{png_path}{test_path}{eeg_low_freq_png}"
+ecg_test_path = f"{png_path}{test_path}{ecg_png}"
 
 # Training Config:
 epoch_train = 300
@@ -132,7 +139,8 @@ def run():
                                             eeg_2_path= eeg_low_train_path,
                                             batch_size=b_size,
                                             img_shape=get_img_input_shape(for_model=True),
-                                            shuffle=True)
+                                            shuffle=True,
+                                            class_distribution=train_class_distribution)
     validation_gen = custom_generator_three_input(ecg_path=ecg_validation_path,
                                                 eeg_1_path=eeg_all_validation_path,
                                                 eeg_2_path= eeg_low_validation_path,
@@ -171,11 +179,35 @@ def run():
 
 if __name__ == "__main__":
 
-    create_validation_dir(eeg_all_train_path, eeg_all_validation_path)
+   
+    # '''
+    # Train and evaluate model.
+    # '''
+    # # #run()
+    train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
+                                        eeg_1_path=eeg_all_train_path,
+                                        eeg_2_path= eeg_low_train_path,
+                                        batch_size=3,
+                                        img_shape=get_img_input_shape(for_model=True),
+                                        shuffle=True,
+                                        class_distribution=train_class_distribution)
 
-    '''
-    Train and evaluate model.
-    '''
-    #run()
 
+    image, label = train_gen[0]
+    print(type(label))
+    print(label)
+    show_batch(image, label)
+
+
+    # test_gen = test_generator_three_input(ecg_path=ecg_test_path,
+    #                                     eeg_1_path=eeg_all_test_path,
+    #                                     eeg_2_path= eeg_low_test_path,
+    #                                     batch_size=1,
+    #                                     img_shape=get_img_input_shape(for_model=True),
+    #                                     shuffle=True,
+    #                                     verbose=True)
+    # x, y = test_gen[0]
+
+    # print(y)
+    # print(x)
 

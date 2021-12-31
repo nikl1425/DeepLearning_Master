@@ -18,7 +18,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
     Pass dict class distribution if adjust class sampling.
     Generate path df upon init.
     """
-    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', is_test=False):
+    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', verbose=False):
         self.batch_size = batch_size
         self.img_shape = img_shape
         self.class_distribution = class_distribution
@@ -29,10 +29,11 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         self.ecg_path = ecg_path
         self.eeg_1_path = eeg_1_path
         self.eeg_2_path = eeg_2_path
+        self.verbose= verbose
         self.eeg_1_df, self.eeg_2_df, self.ecg_df = self.__generate_data()
         self.len = len(self.eeg_1_df)
         self.n_name = self.ecg_df[self.Y_col].nunique()
-        self.is_test = is_test
+        
         
     def __generate_data(self):
         eeg_1_class_dist = inspect_class_distribution(self.eeg_1_path)
@@ -41,12 +42,20 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         max_n_images = get_lowest_distr(ecg_class_dist, eeg_1_class_dist, eeg_2_class_dist)
         balanced_ecg_data = limit_data(self.ecg_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
         balanced_eeg_1_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
-        balanced_eeg_2_data = limit_data(self.eeg_1_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
+        balanced_eeg_2_data = limit_data(self.eeg_2_path, max_n_images, self.class_distribution).sort_values(by=[self.Y_col]).reset_index(drop=True)
 
-        print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
-        print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
-        print(balanced_eeg_1_data.head())
-        print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
+        if self.verbose:
+            print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
+            print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
+            print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
+
+            print("ECG DF:")
+            print(balanced_ecg_data.head())
+            print("EEG ALL DF:")
+            print(balanced_eeg_1_data.head())
+            print("EEG_LOW DF:")
+            print(balanced_eeg_2_data.head())
+
 
         return shuffle_order_dataframes(balanced_eeg_1_data, balanced_eeg_2_data, balanced_ecg_data)
 
@@ -62,7 +71,7 @@ class custom_generator_three_input(tf.keras.utils.Sequence):
         return image_arr/255.
 
     def __get_output(self, label, num_classes):
-        print(self.n_name)
+        #print(self.n_name)
         categoric_label = self.class_mapping[label]
         return tf.keras.utils.to_categorical(categoric_label, num_classes=num_classes)
 
@@ -101,11 +110,12 @@ class test_generator_three_input(tf.keras.utils.Sequence):
     We also need a custom data generator for this due to multiple inputs and specific labelling of the classes.
     All the test folders contains the same number of images so no need to check and random sample / shuffle
     '''
-    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', is_test=False):
+    def __init__(self, ecg_path, eeg_1_path, eeg_2_path, batch_size, img_shape, class_distribution = {}, shuffle=True, X_col='filename', Y_col='class', is_test=False, verbose=False):
         self.batch_size = batch_size
         self.img_shape = img_shape
         self.class_distribution = class_distribution
         self.shuffle = shuffle
+        self.verbose = verbose
         self.X_col = X_col
         self.Y_col = Y_col
         self.class_mapping = {"Seizure": 0, "Preictal": 1, "Interictal": 2} # ændre dette
@@ -122,10 +132,20 @@ class test_generator_three_input(tf.keras.utils.Sequence):
         balanced_eeg_1_data = create_dataframe_test(self.eeg_1_path)
         balanced_eeg_2_data = create_dataframe_test(self.eeg_2_path)
 
-        print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
-        print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
-        print(balanced_eeg_1_data.head())
-        print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
+        if self.verbose:
+            print(f"ECG\n{balanced_ecg_data['class'].value_counts()}")
+            print(f"EEG ALL\n{balanced_ecg_data['class'].value_counts()}")
+            print(f"EEG LOW\n{balanced_ecg_data['class'].value_counts()}")
+
+            print("ECG DF:")
+            print(balanced_ecg_data.head())
+            print(balanced_ecg_data.tail())
+            print("EEG ALL DF:")
+            print(balanced_eeg_1_data.head())
+            print(balanced_eeg_1_data.tail())
+            print("EEG_LOW DF:")
+            print(balanced_eeg_2_data.head())
+            print(balanced_eeg_2_data.tail())
 
         return shuffle_order_dataframes(balanced_eeg_1_data, balanced_eeg_2_data, balanced_ecg_data, testing=True)
 
@@ -140,7 +160,7 @@ class test_generator_three_input(tf.keras.utils.Sequence):
         return image_arr/255.
 
     def __get_output(self, label, num_classes):
-        print(self.n_name)
+        #print(self.n_name)
         categoric_label = self.class_mapping[label]
         return tf.keras.utils.to_categorical(categoric_label, num_classes=num_classes)
 
