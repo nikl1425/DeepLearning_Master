@@ -10,7 +10,7 @@ import os
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from sklearn.metrics import classification_report, confusion_matrix
-
+tf.config.run_functions_eagerly(False)
 print(f"Tensor Flow Version: {tf.__version__}")
 print(f"Keras Version: {tensorflow.keras.__version__}")
 print()
@@ -59,7 +59,7 @@ eeg_low_train_path = f"{png_path}{train_path}{eeg_low_freq_png}"
 ecg_train_path = f"{png_path}{train_path}{ecg_png}"
 
 # Validation sets:
-eeg_all_validation_path = f"{png_path}{eeg_all_freq_png}{validation_path}"
+eeg_all_validation_path = f"{png_path}{validation_path}{eeg_all_freq_png}"
 eeg_low_validation_path = f"{png_path}{validation_path}{eeg_low_freq_png}"
 ecg_validation_path = f"{png_path}{validation_path}{ecg_png}"
 
@@ -70,7 +70,7 @@ eeg_low_test_path = f"{png_path}{test_path}{eeg_low_freq_png}"
 ecg_test_path = f"{png_path}{test_path}{ecg_png}"
 
 # Training Config:
-epoch_train = 300
+epoch_train = 10
 b_size = 18
 start_lr = 0.00001
 loss_function = "categorical_crossentropy"
@@ -93,10 +93,10 @@ def run():
     #check_invalid_files(eeg_img_path)
     #check_invalid_files(ecg_img_path)
 
-    model = get_vgg16_resnet152(get_img_input_shape(True))
+    #model = get_vgg16_resnet152(get_img_input_shape(True))
     #model = tensorflow.keras.models.load_model("Shallow_checkpoint.h5")
     #model = load_saved_model("/media/deepm/NHR HDD/Køge_04/model_evaluation/cnn.h5")
-    #model = get_shallow_three_input_cnn(img_shape=get_img_input_shape(True))
+    model = get_shallow_three_input_cnn(img_shape=get_img_input_shape(True))
 
     print(model.summary())
 
@@ -160,54 +160,24 @@ def run():
     evaluate_training_plot(history, eval_path, same_plot=True)
     evaluate_training_plot(history, eval_path, same_plot=False)
 
-    #test_gen, test_step, y_true = test_generator(ecg_path=ecg_validation_path, 
-     #                                   eeg_1_path=eeg_all_validation_path,
-      #                                  eeg_2_path=eeg_low_validation_path,
-       #                                 img_shape=get_img_input_shape())
-                                                                   
-   # pred = model.predict(test_gen, steps=test_step)
-    #y_pred = pred.argmax(axis=-1)
-    #labels = ["Seizure", "Preictal", "Interictal"]
+    test_gen, test_step, y_true = test_generator_three_input(ecg_path=ecg_validation_path, 
+                                                            eeg_1_path=eeg_all_validation_path,
+                                                            eeg_2_path=eeg_low_validation_path,
+                                                            img_shape=get_img_input_shape(),
+                                                            batch_size=1)
+                                                                
+    pred = model.predict(test_gen, steps=test_step)
+    y_pred = pred.argmax(axis=-1)
+    labels = ["Seizure", "Preictal", "Interictal"]
 
- #   clf_report = classification_report(y_true=y_true, y_pred=y_pred, target_names=labels)
+    clf_report = classification_report(y_true=y_true, y_pred=y_pred, target_names=labels)
 
-  #  print(clf_report)
+    print(clf_report)
 
-   # confusion_matx = confusion_matrix(y_true=y_true, y_pred=list(y_pred), normalize='all')
+    confusion_matx = confusion_matrix(y_true=y_true, y_pred=list(y_pred), normalize='all')
 
-    #plot_con_matrix(confusion_matx, eval_path, labels)
+    plot_con_matrix(confusion_matx, eval_path, labels)
 
 if __name__ == "__main__":
 
-   
-    # '''
-    # Train and evaluate model.
-    # '''
-    # # #run()
-    train_gen = custom_generator_three_input(ecg_path=ecg_train_path,
-                                        eeg_1_path=eeg_all_train_path,
-                                        eeg_2_path= eeg_low_train_path,
-                                        batch_size=3,
-                                        img_shape=get_img_input_shape(for_model=True),
-                                        shuffle=True,
-                                        class_distribution=train_class_distribution)
-
-
-    image, label = train_gen[0]
-    print(type(label))
-    print(label)
-    show_batch(image, label)
-
-
-    # test_gen = test_generator_three_input(ecg_path=ecg_test_path,
-    #                                     eeg_1_path=eeg_all_test_path,
-    #                                     eeg_2_path= eeg_low_test_path,
-    #                                     batch_size=1,
-    #                                     img_shape=get_img_input_shape(for_model=True),
-    #                                     shuffle=True,
-    #                                     verbose=True)
-    # x, y = test_gen[0]
-
-    # print(y)
-    # print(x)
-
+    run()
